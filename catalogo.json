@@ -1,43 +1,1609 @@
 {
   "courses": [
     {
-      "id": "basica", "name": "Formação Básica", "description": "ChatGPT, Claude e produtividade aplicada.", "status": "Conteúdo piloto",
+      "id": "basica",
+      "name": "Plano Básico",
+      "description": "Entenda a IA. Trabalhe melhor. Publique sua primeira solução.",
+      "status": "Jornada escrita disponível · vídeos em preparação",
+      "hours": 24,
       "modules": [
-        {"name":"1. Do problema à primeira solução", "lessons":[
-          {"id":"problema-real","title":"Comece por um problema real","available":true,"format":"Leitura guiada","material":"materiais/roteiro-primeira-solucao.md","sections":[
-            {"title":"Entenda o problema","text":"Escolha uma tarefa que você repete no trabalho e que consegue avaliar com clareza. Comece por um relatório, uma comparação de propostas ou a organização de informações. Antes de abrir a IA, escreva o que entra na tarefa, o que você faz e qual resultado precisa entregar."},
-            {"title":"Construa junto","steps":["Descreva a tarefa em uma frase: eu preciso transformar uma lista de despesas em um resumo mensal.","Separe uma amostra pequena de dados sem informações pessoais, credenciais ou documentos confidenciais.","Defina o formato de saída: uma tabela por categoria, com valores e observações.","Liste como você vai conferir o resultado: totais, categorias e informações ausentes."]},
-            {"title":"Aplique no trabalho","text":"Use o roteiro para construir uma primeira versão com dados de exemplo. Compare a resposta com o resultado esperado. Só avance para dados e processos reais depois de entender as limitações e obter as permissões necessárias."},
-            {"title":"Seu desafio","text":"Preencha o roteiro com uma tarefa da sua rotina. A entrega desta aula é uma descrição do problema, uma amostra de entrada e três critérios de conferência."}
-          ]},
-          {"id":"pedido-claro","title":"Transforme sua tarefa em um pedido claro","available":true,"format":"Leitura guiada","material":"materiais/prompt-analise-gerencial.md","sections":[
-            {"title":"Dê contexto e defina a entrega","text":"Um pedido útil explica o objetivo, informa quais dados podem ser usados e define como a resposta deve ser organizada. Escrever mais não garante um resultado melhor. Escrever de forma específica ajuda a reduzir ambiguidades."},
-            {"title":"Construa junto","steps":["Informe o objetivo: comparar três propostas de fornecedores.","Descreva as colunas disponíveis: produto, quantidade, preço, frete e prazo.","Peça uma tabela comparativa e uma lista de informações que faltam.","Determine que a IA não invente preços, tributos, condições ou prazos ausentes.","Confira os cálculos e as conclusões antes de usar o resultado."]},
-            {"title":"Aplique no trabalho","text":"Teste o modelo de pedido no ChatGPT ou no Claude com dados de exemplo. Guarde o pedido, a resposta e as correções que precisou fazer. Você terá uma base reutilizável para tarefas semelhantes."},
-            {"title":"Seu desafio","text":"Adapte o prompt para a tarefa da primeira aula. Defina o formato da entrega e o que a IA deve fazer quando não houver informação suficiente."}
-          ]},
-          {"id":"validar-resultado","title":"Confira o resultado antes de aplicar","available":true,"format":"Leitura guiada","material":"materiais/checklist-validacao.md","sections":[
-            {"title":"Uma resposta convincente precisa ser conferida","text":"Textos claros e tabelas bem organizadas podem conter erros. Confira se os dados foram interpretados corretamente, se os cálculos fecham e se as conclusões têm apoio nas informações de entrada."},
-            {"title":"Construa junto","steps":["Compare os totais da resposta com os dados originais.","Confira unidades, períodos, moeda e critérios de classificação.","Identifique informações inventadas, omitidas ou tratadas como certeza sem evidência.","Teste uma entrada incompleta e outra com uma situação fora do padrão.","Registre quem revisa o resultado e quais ações precisam de aprovação humana."]},
-            {"title":"Aplique no trabalho","text":"Escolha uma resposta produzida na aula anterior e preencha o checklist. Corrija o pedido ou os dados quando identificar erros. Automatize somente depois de ter uma forma de detectar falhas e interromper ações incorretas."},
-            {"title":"Seu desafio","text":"Escreva três testes para sua primeira solução: um caso comum, um com informação ausente e um com resultado inesperado. Explique como você reconhece uma resposta aceitável."}
-          ]}
-        ]},
-        {"name":"2. Documentos e produtividade", "lessons":[{"id":"documentos","title":"Organize e analise documentos","available":false},{"id":"relatorios","title":"Construa relatórios e apresentações","available":false}]},
-        {"name":"3. Dados e indicadores", "lessons":[{"id":"planilhas","title":"Prepare sua planilha para análise","available":false},{"id":"indicadores","title":"Transforme dados em indicadores","available":false}]},
-        {"name":"4. Conexões e primeiras rotinas", "lessons":[{"id":"conexoes","title":"Conecte arquivos, e-mail e calendário","available":false},{"id":"rotinas","title":"Desenhe sua primeira rotina com IA","available":false}]}
+        {
+          "name": "1. Fundamentos da IA generativa",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "ia-generativa",
+              "title": "O que é IA e para que serve no trabalho",
+              "number": 1,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/ia-generativa.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Reconhecer usos úteis e limites da IA generativa."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Inteligência artificial é um conjunto de técnicas para executar tarefas que exigem reconhecimento de padrões, previsão ou decisão. IA generativa cria conteúdo, como textos, imagens e código. Uma conversa convincente não garante uma resposta correta. Neste curso, você usará ChatGPT e Claude para apoiar tarefas, mantendo a responsabilidade pela decisão. Automatizar uma regra fixa e gerar uma resposta com IA são atividades diferentes."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Comparar uma regra de cálculo de frete com um resumo produzido por IA e discutir onde cada abordagem funciona."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Listar cinco tarefas da profissão e classificar quais precisam de uma regra, de IA ou de revisão humana."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Mapa de oportunidades com uma tarefa prioritária e seu resultado esperado."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno distingue geração de conteúdo, automação e decisão humana?"
+                }
+              ]
+            },
+            {
+              "id": "llm-contexto",
+              "title": "LLM, tokens, contexto e alucinações",
+              "number": 2,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/llm-contexto.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Explicar o funcionamento de um modelo de linguagem sem depender de jargões."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "LLM significa Large Language Model, ou grande modelo de linguagem. Ele aprende padrões durante o treinamento e produz respostas com base no contexto disponível. Tokens são unidades de processamento, não necessariamente palavras inteiras. A janela de contexto limita o que pode ser considerado em uma interação. Memória do produto, arquivo anexado e conhecimento do treinamento têm funções distintas. Alucinação é uma resposta incorreta ou inventada apresentada de forma plausível."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Mostrar a diferença entre pedir uma resposta sem dados e fornecer uma tabela curta; testar uma informação ausente."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Pedir uma análise com dado faltante e orientar a IA a reconhecer o que não sabe."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Glossário explicado com palavras próprias e um exemplo de resposta corrigida."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno identifica uma conclusão sem evidência e sabe pedir a informação ausente?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2. Ferramentas, produtos e modelos",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "escolher-modelos",
+              "title": "Claude, ChatGPT e Codex: produtos e modelos",
+              "number": 3,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/escolher-modelos.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Escolher o ambiente e o modelo de acordo com a tarefa."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Claude e ChatGPT são produtos; os modelos são os motores usados por eles. Codex e Claude Code são ferramentas de trabalho com código e projetos. O curso compara Haiku, Sonnet, Opus e Fable no ecossistema Claude, e Astra, Sol e Luna em Work e Codex. Disponibilidade depende de conta, plano, cliente e atualização. A escolha considera qualidade, tempo, contexto, custo e ferramentas. Um modelo mais caro não é automaticamente a melhor opção para toda tarefa."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Executar a mesma tarefa em dois modelos disponíveis e comparar precisão, tempo e correções necessárias."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar uma matriz para resumo simples, análise difícil e construção de um site, registrando a versão realmente usada."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Matriz de escolha com justificativa por tarefa."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A comparação usa evidências da mesma tarefa em vez de preferência pela marca?"
+                }
+              ]
+            },
+            {
+              "id": "acessar-ferramentas",
+              "title": "Como acessar e organizar ChatGPT e Claude",
+              "number": 4,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/acessar-ferramentas.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Preparar o ambiente de estudo e trabalhar com arquivos e projetos."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Comece pelas páginas oficiais, crie ou acesse sua conta e confira os recursos do seu plano. Separe conversas por objetivo, mantenha arquivos de referência identificados e registre o que está aprovado. Projetos, anexos, conectores e agentes têm comportamentos próprios em cada produto. Recursos pagos e consumo de API devem ser avaliados antes da turma. O aluno pode acompanhar uma demonstração quando um recurso não estiver disponível em sua conta."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Abrir os produtos oficiais, localizar o seletor de modelos e criar um espaço de estudo com dados fictícios."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Organizar uma pasta de exercícios, uma conversa por tarefa e um documento de contexto."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Ambiente pronto e checklist de acesso preenchido."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno localiza seus arquivos, sabe qual modelo está usando e reconhece as permissões concedidas?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3. Problema e prompts profissionais",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "problema-real",
+              "title": "Do problema real ao briefing da solução",
+              "number": 5,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/problema-real.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Traduzir uma necessidade do trabalho em uma tarefa mensurável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Antes de pedir algo à IA, descreva a entrada, a transformação e a saída. Um pedido como melhorar a empresa é amplo demais. Comparar três propostas com preço, frete e prazo cria um resultado verificável. Delimite o público, os dados disponíveis, as restrições e os critérios de sucesso. Nesta etapa, escolha um problema pequeno que possa ser resolvido e demonstrado durante a formação."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Transformar uma necessidade de compras em um briefing com entradas e três critérios de conferência."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Escolher uma tarefa da própria rotina e estimar o tempo gasto atualmente."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Briefing de uma página com objetivo, entrada, saída, restrições e medida de resultado."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Outra pessoa consegue executar e avaliar a tarefa a partir do briefing?"
+                }
+              ]
+            },
+            {
+              "id": "pedido-claro",
+              "title": "Prompts profissionais e melhoria por iteração",
+              "number": 6,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/pedido-claro.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Produzir pedidos claros e melhorar resultados com critérios."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Um prompt profissional informa objetivo, contexto, dados, restrições e formato de entrega. Exemplos ajudam quando deixam claro o padrão esperado. Trabalhe por iteração: produza uma versão, confira, explique o erro e peça a correção. Não use instruções genéricas como faça perfeito no lugar de critérios. Peça que fatos, hipóteses e lacunas sejam separados. Guarde versões úteis para tarefas recorrentes."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Comparar um prompt vago com outro estruturado para analisar despesas fictícias."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar duas versões do prompt do briefing e avaliar as respostas com a mesma rubrica."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Prompt reutilizável e registro das melhorias entre versões."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A segunda versão melhora um critério concreto sem inventar informações?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4. Validação e entregas de trabalho",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "validar-resultado",
+              "title": "Como conferir respostas, fontes e cálculos",
+              "number": 7,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/validar-resultado.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Identificar erros antes de usar uma entrega gerada por IA."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Confira nomes, datas, unidades, totais e documentos de origem. Uma citação precisa ser aberta e verificada: sua presença não prova que sustenta a conclusão. Para cálculos, compare com uma planilha ou regra independente. Use casos comuns, dados ausentes e situações fora do padrão. A conferência deve ser mais rigorosa quando um erro pode gerar prejuízo. Registre limitações e mantenha a decisão final com quem conhece o processo."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Inserir um total incorreto e uma fonte que não sustenta a afirmação em uma resposta de exemplo."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Revisar a entrega anterior e aplicar três testes de aceitação."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Checklist preenchido, resposta corrigida e evidências da revisão."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno detecta o erro deliberado e explica como confirmou a correção?"
+                }
+              ]
+            },
+            {
+              "id": "documentos-dados",
+              "title": "Documentos, planilhas e apresentações com IA",
+              "number": 8,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/documentos-dados.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Transformar informação em entregas profissionais revisadas."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Arquivos precisam de organização antes da análise. Identifique colunas, períodos, moeda, dados faltantes e origem. Para documentos, preserve o sentido e confira referências. Para apresentações, defina público, mensagem e sequência. Use ChatGPT ou Claude para resumir, comparar e estruturar uma entrega, conferindo os valores fora da conversa. O ganho de produtividade depende da qualidade da entrada e da revisão, não apenas do tamanho do prompt."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Converter uma base fictícia de vendas em tabela de indicadores e uma apresentação curta."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Produzir um relatório de uma página e três slides a partir da mesma base."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Relatório, tabela conferida e roteiro de apresentação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "As três entregas mantêm os mesmos valores e conclusões rastreáveis?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5. Skills e primeiros conceitos de CLI",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "skills-fundamentos",
+              "title": "O que é uma skill e quando usar",
+              "number": 9,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/skills-fundamentos.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Distinguir um prompt pontual de um procedimento reutilizável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma skill organiza instruções para um tipo de tarefa e pode incluir referências, modelos e scripts. Nos agentes compatíveis, o arquivo SKILL.md descreve o propósito e o fluxo de trabalho. Ela não é um novo modelo nem uma garantia de acerto. O básico ensina a reconhecer, avaliar e usar uma skill existente. A criação, instalação e teste aprofundados ficam no avançado. Compatibilidade e permissões devem ser conferidas na ferramenta usada."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Aplicar uma skill de revisão de relatório e mostrar suas etapas, entradas e limites."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Escrever um procedimento reutilizável com objetivo, passos e critérios, sem instalar código desconhecido."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Esboço de skill para uma atividade da profissão."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno explica quando a skill deve ser usada e quando não se aplica?"
+                }
+              ]
+            },
+            {
+              "id": "cli-fundamentos",
+              "title": "CLI, terminal, editor e arquivos: primeiros conceitos",
+              "number": 10,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/cli-fundamentos.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Entender as ferramentas que permitem trabalhar em um projeto."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "CLI é uma interface de linha de comando. O terminal permite executar comandos; o shell interpreta esses comandos. Um editor permite ler e alterar arquivos. Uma CLI como Codex ou Claude Code pode atuar sobre um projeto, conforme suas permissões. Comandos podem criar, modificar ou apagar arquivos. No básico, o foco é reconhecer caminhos, ler saídas e acompanhar comandos simples; a instalação e o uso contínuo serão aprofundados no avançado."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Mostrar uma pasta de projeto, listar arquivos e explicar a diferença entre navegador, editor e terminal."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Identificar a pasta atual e ler um comando antes de executá-lo em ambiente de estudo."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Mapa do ambiente: pasta, editor, terminal, navegador e ferramenta de IA."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno sabe em qual pasta está e consegue explicar o efeito do comando?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6. GitHub e versionamento",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "github-conta",
+              "title": "Como criar sua conta e seu primeiro repositório GitHub",
+              "number": 11,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/github-conta.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Organizar um projeto em um repositório com acesso adequado."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Git é o sistema de controle de versões. GitHub hospeda repositórios e permite colaboração. Crie sua conta pelo site oficial, confirme o e-mail e configure autenticação em duas etapas. Escolha a visibilidade antes de enviar arquivos. O README explica o projeto. Não publique senhas, dados pessoais ou chaves. O repositório de estudo conterá apenas o material criado para o curso e exemplos fictícios."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Criar um repositório de demonstração, um README e mostrar configurações de visibilidade."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar a própria conta ou usar a conta existente e iniciar um repositório de estudo."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Repositório com README, descrição e visibilidade revisada."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno diferencia Git de GitHub e localiza a visibilidade e o histórico?"
+                }
+              ]
+            },
+            {
+              "id": "versionamento-basico",
+              "title": "Versionar: salvar mudanças, comparar e recuperar",
+              "number": 12,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/versionamento-basico.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Registrar alterações e compreender o histórico do projeto."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Versionar é registrar mudanças de modo que seja possível comparar e recuperar estados. Um commit representa um conjunto de alterações com uma mensagem. Uma branch permite trabalhar em uma linha separada. No básico, pratique uma mudança pequena pelo GitHub e compare o antes e o depois. Sincronizar arquivos não substitui compreender o histórico. Antes de uma mudança, registre o estado que funciona."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Alterar um texto do README, criar um commit e revisar o diff."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Registrar três mudanças pequenas com mensagens claras e localizar a primeira versão."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Histórico com commits compreensíveis e comparação documentada."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno identifica qual alteração causou uma diferença e encontra a versão anterior?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "7. Construção e primeira publicação",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "primeiro-site",
+              "title": "Construa sua primeira página com Codex ou Claude",
+              "number": 13,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/primeiro-site.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Converter um briefing em uma página simples e revisável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma página web combina estrutura, apresentação e comportamento. HTML organiza o conteúdo, CSS cuida do visual e JavaScript adiciona interações. A IA ajuda a construir, mas você precisa definir texto, público e critérios. Comece por uma página estática com uma ação clara. Confira a navegação, os links e o celular. Nesta etapa, não implemente login, pagamentos ou coleta de dados sensíveis."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Criar uma página de apresentação a partir de um briefing e revisar a proposta antes das alterações."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Construir uma página pessoal ou profissional com título, serviços e contato."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Página inicial funcionando e checklist de conteúdo e navegação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno consegue explicar o objetivo da página e demonstrar seus links?"
+                }
+              ]
+            },
+            {
+              "id": "build-deploy-basico",
+              "title": "Build e deploy: publique sua primeira página",
+              "number": 14,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/build-deploy-basico.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Distinguir preparação da aplicação e publicação na internet."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Build prepara arquivos para distribuição quando a tecnologia exige essa etapa. Deploy publica uma versão em um ambiente acessível. Uma página HTML simples pode ser publicada sem build. O GitHub Pages serve arquivos estáticos; ele não executa um servidor de login ou banco de dados. Publique a página de estudo, espere a execução finalizar e confira a URL. Compare a versão publicada com o commit correspondente."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Publicar uma página de exemplo no GitHub Pages e acompanhar a execução."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Publicar a própria página e testar dois links em computador e celular."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "URL pública e registro do commit da publicação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A página publicada corresponde ao código e não depende de arquivos locais?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "8. Automação e projeto de produtividade",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "automacao-intro",
+              "title": "Automação e n8n: desenhe seu primeiro fluxo",
+              "number": 15,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/automacao-intro.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Entender gatilhos, etapas e saídas antes de integrar sistemas."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "n8n é uma ferramenta de automação por fluxos. Um gatilho inicia a execução, nós transformam ou encaminham dados e uma saída entrega o resultado. Nem todo fluxo precisa de IA. O básico apresenta a interface e um exercício com dados fictícios e disparo manual. APIs, credenciais, webhooks, tratamento de erro e execução em produção pertencem ao avançado. Uma automação útil começa por um processo compreendido."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Montar um fluxo manual que recebe uma lista de tarefas, filtra prioridades e gera um resumo."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Desenhar uma rotina de trabalho e acompanhar a execução de um fluxo de laboratório."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Diagrama do processo e registro da entrada e saída de exemplo."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno identifica o gatilho, a transformação e o resultado sem confundir automação com IA?"
+                }
+              ]
+            },
+            {
+              "id": "projeto-basico",
+              "title": "Projeto final: seu kit profissional de produtividade",
+              "number": 16,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/projeto-basico.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Demonstrar uma solução simples, revisada e reutilizável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "O projeto final reúne o briefing, o prompt, a entrega revisada e o histórico de construção. Inclua uma página publicada quando ela fizer sentido para o problema. Explique o que a IA fez, o que você conferiu e quais limites permanecem. A demonstração deve permitir que outra pessoa compreenda e reproduza o trabalho. Um resultado simples e confiável é melhor que uma solução ampla sem validação."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Apresentar um kit de exemplo com comparação de propostas e uma página de apresentação."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Finalizar a própria solução e apresentar uma demonstração de cinco minutos."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Kit com briefing, prompts, relatório, evidências, repositório e plano de aplicação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A entrega passa nos critérios do briefing e o aluno consegue justificar as decisões?"
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
-    {"id":"avancada","name":"Formação Avançada","description":"Automações, agentes e integrações.","status":"Em preparação","modules":[
-      {"name":"1. Automação entre sistemas","lessons":[{"id":"apis","title":"APIs e webhooks na prática","available":false},{"id":"n8n","title":"Construa um fluxo de automação","available":false}]},
-      {"name":"2. Agentes e conhecimento","lessons":[{"id":"agentes","title":"Desenhe um agente com limites claros","available":false},{"id":"rag","title":"Conecte documentos e bases de conhecimento","available":false}]},
-      {"name":"3. Projetos empresariais","lessons":[{"id":"integracoes","title":"Integre dados e processos empresariais","available":false},{"id":"operacao","title":"Monitore, teste e mantenha sua solução","available":false}]}
-    ]}
+    {
+      "id": "avancada",
+      "name": "Plano Avançado",
+      "description": "Construa automações, agentes e aplicações que se conectam.",
+      "status": "Jornada escrita disponível · vídeos em preparação",
+      "hours": 36,
+      "modules": [
+        {
+          "name": "1. Ambiente e agentes no terminal",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "ambiente-avancado",
+              "title": "Prepare seu ambiente de desenvolvimento",
+              "number": 1,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/ambiente-avancado.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Instalar e verificar as ferramentas necessárias ao laboratório."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "O ambiente combina editor, terminal, Git e o runtime exigido pelo projeto, como Node.js ou Python. Use instruções oficiais e registre versões. No Windows, escolha o caminho de instalação compatível e utilize WSL quando necessário. Separe desenvolvimento de produção. Antes de construir, confirme que o projeto executa e que os comandos são compreendidos. O curso não exige treinar modelos do zero."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Abrir um projeto mínimo, conferir versões e executar uma aplicação local."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Preparar o próprio ambiente e registrar comandos de execução."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Checklist do ambiente e aplicação local acessível."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Outra pessoa consegue iniciar o projeto seguindo o README?"
+                }
+              ]
+            },
+            {
+              "id": "agentes-cli",
+              "title": "Codex CLI e Claude Code na prática",
+              "number": 2,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/agentes-cli.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Usar agentes para inspecionar, alterar e testar um projeto."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Codex CLI e Claude Code trabalham com arquivos, comandos e ferramentas conforme a configuração. Autenticação pelo produto e uso de API podem ter cobranças e limites diferentes. Defina uma tarefa pequena, peça inspeção, revise o plano e acompanhe o diff. Permissões amplas não substituem revisão. Escolha apenas um agente por alteração para evitar edições concorrentes na mesma área."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Pedir a cada ferramenta a explicação de um projeto e executar uma alteração controlada."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Adicionar uma função pequena, revisar arquivos modificados e executar a verificação."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Diff revisado, verificação registrada e commit da alteração."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno explica quais arquivos mudaram e como confirmou o comportamento?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "2. Contexto de projeto e skills",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "contexto-projeto",
+              "title": "Contexto persistente: AGENTS.md e CLAUDE.md",
+              "number": 3,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/contexto-projeto.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Documentar regras e decisões para orientar o trabalho da IA."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Instruções de projeto registram arquitetura, padrões e comandos úteis. AGENTS.md orienta agentes compatíveis; CLAUDE.md tem papel próprio no Claude Code. Essas instruções não substituem os arquivos reais nem eliminam limites de contexto. Mantenha o texto curto, preciso e coerente com o código. Registre o que está aprovado e retire orientações antigas. Nunca coloque credenciais nesses arquivos."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Comparar uma solicitação sem contexto com outra apoiada em instruções do projeto."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar instruções com escopo, execução, testes e restrições de edição."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Documentação de contexto versionada e validada contra o projeto."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Os comandos documentados funcionam e as regras não se contradizem?"
+                }
+              ]
+            },
+            {
+              "id": "criar-skills",
+              "title": "Crie, instale e teste uma skill reutilizável",
+              "number": 4,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/criar-skills.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Transformar um procedimento em uma skill verificável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma skill útil descreve quando ativar, entradas necessárias, procedimento, saída e critérios. SKILL.md usa metadados como nome e descrição; referências e scripts são opcionais. Codex e Claude Code têm regras próprias de descoberta e instalação. Consulte a documentação atual antes de escolher o diretório. Teste situações em que deve ativar e situações em que não deve. Scripts precisam de revisão antes de execução."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Construir uma skill de revisão de relatório e testar dois pedidos compatíveis e um incompatível."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar uma skill para o projeto, instalar no ambiente de estudo e registrar os testes."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Skill versionada, exemplos de uso e resultados dos testes."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A skill produz uma entrega útil e respeita os limites definidos?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3. Git colaborativo e qualidade",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "git-colaboracao",
+              "title": "Git, branches, pull requests e revisão",
+              "number": 5,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/git-colaboracao.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Trabalhar com mudanças isoladas e revisão antes da integração."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Branches isolam desenvolvimento. Pull requests organizam a proposta e a revisão; o diff mostra o que será integrado. Faça commits pequenos, descreva o problema e apresente evidências. Conflitos precisam ser resolvidos preservando a intenção das mudanças. A IA pode ajudar a revisar, mas o responsável precisa compreender o resultado. Evite sobrescrever o histórico compartilhado sem necessidade."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Criar uma branch, alterar uma função e abrir uma proposta com diff e validação."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Revisar o trabalho de um colega e integrar uma alteração aprovada no laboratório."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Pull request com descrição, revisão e verificações."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A mudança está isolada e a revisão explica o comportamento esperado?"
+                }
+              ]
+            },
+            {
+              "id": "testes-debug",
+              "title": "Debug, testes e critérios de aceitação",
+              "number": 6,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/testes-debug.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Diagnosticar falhas e testar comportamento importante."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Um teste útil verifica uma regra ou um percurso do usuário. Comece pelo resultado esperado, reproduza o erro e reduza o caso. Leia logs e mensagens antes de alterar código. A IA pode sugerir uma correção que apenas esconde o sintoma. Use testes de unidade para regras, integração para componentes e navegação para percursos relevantes. Registre a falha antes e o resultado após a correção."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Reproduzir um cálculo incorreto e criar uma verificação que falha antes da correção."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Corrigir um defeito e executar o mesmo teste com um caso normal e um caso limite."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Registro de reprodução, correção e teste relevante."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A verificação detectaria o defeito se a correção fosse removida?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4. Aplicação web e pipeline",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "web-profissional",
+              "title": "Da ideia à aplicação: interface e arquitetura",
+              "number": 7,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/web-profissional.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Construir uma interface clara com comportamento verificável."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Escolha a tecnologia pela necessidade, não pelo entusiasmo do agente. Defina páginas, estados de carregamento, erro e vazio, navegação e acessibilidade. Separe a interface das integrações e mantenha dados de demonstração identificados. A IA acelera implementação, mas o briefing e a revisão visual guiam o resultado. Uma aplicação deve funcionar em telas diferentes e explicar ao usuário o que ocorreu."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Construir um painel com lista, filtro e estados de erro e vazio."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Implementar a interface do projeto e revisar computador, celular e navegação por teclado."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Interface funcional com registros da validação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Os controles respondem e os estados de erro são compreensíveis?"
+                }
+              ]
+            },
+            {
+              "id": "build-pipeline",
+              "title": "Dependências, build e integração contínua",
+              "number": 8,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/build-pipeline.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Preparar uma versão reproduzível e verificar mudanças automaticamente."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Dependências, arquivos de trava e comandos de build influenciam a reprodução. Registre versões e use os scripts do projeto. Integração contínua executa verificações em mudanças; deploy distribui uma versão. Um build aprovado não prova que a interface funciona. Acrescente um teste útil e uma verificação do percurso principal. Não publique um projeto que apenas funciona na máquina do autor."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Executar instalação reproduzível, teste e build; mostrar uma execução que falha."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar um fluxo de verificação do projeto e corrigir uma falha deliberada."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Pipeline com evidências de falha e sucesso."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Um clone novo consegue gerar a mesma versão com os comandos documentados?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "5. APIs e eventos",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "apis-autenticacao",
+              "title": "APIs, HTTP, JSON e autenticação",
+              "number": 9,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/apis-autenticacao.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Consultar um serviço com dados estruturados e acesso adequado."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "APIs expõem operações. HTTP informa método, URL, cabeçalhos, corpo e resposta; JSON organiza os dados. Status como 401, 403, 429 e 500 indicam problemas diferentes. Chaves e tokens ficam em credenciais ou variáveis de ambiente, não no frontend. Primeiro pratique com uma API de laboratório. Defina contrato, timeout, limites e como tratar respostas inválidas antes de conectar um serviço real."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Consultar uma API de teste e analisar respostas válidas, ausência de autorização e limite de uso."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Documentar uma chamada e validar os campos retornados."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Contrato da integração e chamada de laboratório reproduzível."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A solução distingue erro de acesso, limite e resposta inválida?"
+                }
+              ]
+            },
+            {
+              "id": "webhooks",
+              "title": "Webhooks e eventos entre sistemas",
+              "number": 10,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/webhooks.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Receber eventos e responder sem criar duplicações."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Webhook é uma chamada enviada quando ocorre um evento. URLs de teste e produção podem ser diferentes. Valide autenticação, assinatura quando aplicável, estrutura e identificador do evento. Eventos podem ser repetidos ou chegar fora de ordem. Idempotência permite processar a repetição sem duplicar o efeito. Defina resposta, timeout e rastreio. Receber um evento não significa concluir o processo inteiro."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Receber um evento de pedido fictício e enviar o mesmo identificador duas vezes."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Desenhar um receptor que valida entrada e reconhece a repetição."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Contrato do evento e teste de duplicação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O mesmo evento não cria duas entregas ou dois registros indevidos?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "6. n8n e integrações",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "n8n-fluxo",
+              "title": "n8n: gatilhos, nós, expressões e transformação",
+              "number": 11,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/n8n-fluxo.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Construir um fluxo completo de laboratório."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "No n8n, dados percorrem nós e expressões acessam campos das etapas. Entenda a estrutura dos itens antes de aplicar filtros ou junções. Comece com disparo manual, transforme dados e confira cada saída. Credenciais são configuradas no mecanismo próprio da ferramenta. Mantenha um fluxo pequeno, nomeie os nós pela função e documente o contrato. O objetivo é compreender o processo, não apenas importar um arquivo pronto."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Montar um fluxo que recebe vendas fictícias, filtra o período e gera um resumo."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar um fluxo com gatilho, validação, transformação e saída."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Workflow exportado sem segredos e exemplos de entrada e saída."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno explica cada nó e identifica onde um campo é criado ou alterado?"
+                }
+              ]
+            },
+            {
+              "id": "n8n-integracoes",
+              "title": "n8n com APIs, webhooks e agenda",
+              "number": 12,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/n8n-integracoes.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Conectar etapas externas com controle de credenciais."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Integrações exigem autenticação e contrato. Use nós existentes quando atendem à necessidade e HTTP Request quando precisar de operação específica. Agendas dependem do fuso horário. Diferencie testar manualmente e publicar ou ativar uma execução em produção, conforme a versão. Use dados fictícios e destino de laboratório. Não envie mensagens para pessoas reais durante os exercícios."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Consultar uma API de prática, transformar a resposta e gravar o resultado em um destino de estudo."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Integrar duas etapas externas e definir frequência, credenciais e destino."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Fluxo integrado, diagrama e registro de execução."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A frequência, o fuso e as permissões estão documentados e conferidos?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "7. IA e confiabilidade no n8n",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "n8n-ia",
+              "title": "IA no n8n: saída estruturada e revisão humana",
+              "number": 13,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/n8n-ia.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Adicionar Claude ou OpenAI a um fluxo com validação."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma chamada ao modelo deve ter entrada delimitada e saída esperada. Solicite estrutura definida, valide os campos e rejeite resposta incompleta. O modelo não deve escolher livremente destinatários, valores ou ações críticas. Use aprovação humana antes de executar um efeito relevante. Assinatura do chat não implica crédito de API. O exercício pode usar resposta simulada quando não houver orçamento para a chamada real."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Classificar solicitações fictícias e encaminhar a revisão, sem realizar envio real."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Adicionar uma etapa de IA ou simulação e validar a saída antes da próxima etapa."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Workflow com validação e ponto de revisão humana."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Uma resposta inválida bloqueia a ação seguinte e gera um erro rastreável?"
+                }
+              ]
+            },
+            {
+              "id": "n8n-confiabilidade",
+              "title": "Falhas, tentativas, filas e idempotência",
+              "number": 14,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/n8n-confiabilidade.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Evitar perda de dados, loops e efeitos duplicados."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma automação deve prever timeout, indisponibilidade e limite de uso. Defina tentativas com espera, limite máximo e caminho de erro. Reexecutar não pode duplicar a ação. Mantenha identificadores e estados para saber o que foi concluído. Filas ajudam a controlar volume quando a arquitetura exige. Dados sensíveis não devem aparecer em logs. Uma falha precisa ser detectada e encaminhada para correção."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Simular timeout e resposta 429 em um fluxo e acompanhar o caminho de erro."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Implementar limite de tentativas, registro e prevenção de duplicação."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Fluxo com três cenários de falha demonstrados."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A automação termina de forma controlada e preserva os itens não processados?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "8. Conhecimento e agentes",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "rag-conhecimento",
+              "title": "RAG: respostas apoiadas em documentos",
+              "number": 15,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/rag-conhecimento.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Consultar uma base de conhecimento com referências verificáveis."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "RAG combina recuperação de trechos com geração de resposta. Prepare documentos, divida conteúdo quando necessário, recupere informação relevante e indique a fonte usada. Isso não treina novamente o modelo e não elimina alucinações. A qualidade depende dos documentos e da busca. Aplique permissões antes da recuperação. Uma pergunta sem apoio precisa resultar em reconhecimento da lacuna, não em invenção."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Consultar uma base de políticas fictícias e mostrar uma pergunta com resposta e outra sem fonte."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar uma base pequena e testar cinco perguntas com referências."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Protótipo de consulta e conjunto de perguntas de avaliação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A resposta indica trechos que realmente sustentam a conclusão?"
+                }
+              ]
+            },
+            {
+              "id": "agentes-mcp",
+              "title": "Agentes, ferramentas e MCP com limites claros",
+              "number": 16,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/agentes-mcp.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Projetar um agente que usa ferramentas sob controle."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Um agente combina objetivo, contexto e ferramentas para executar etapas. MCP é um protocolo de conexão com ferramentas e fontes; não é um modelo nem uma autorização automática. Defina operações permitidas, limites de tempo e pontos de aprovação. Conteúdo recebido de documentos pode conter instruções maliciosas; trate-o como dados. Um agente deve conseguir interromper o trabalho e explicar uma falha."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Permitir consulta de um catálogo de estudo e bloquear uma operação fora do escopo."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Desenhar um agente com uma ferramenta de leitura e política de aprovação para escrita."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Mapa de ferramentas, permissões e testes de escopo."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O agente recusa ou interrompe ações que excedem sua autorização?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "9. Dados e integração empresarial",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "sql-dados",
+              "title": "Dados e PostgreSQL: modelagem e consultas",
+              "number": 17,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/sql-dados.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Organizar dados e criar consultas verificáveis."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Tabelas, chaves e relacionamentos definem a estrutura de dados. Use tipos corretos, restrições e parâmetros em consultas. SQL gerado por IA deve ser lido e testado. Comece por uma base fictícia e acesso restrito. Valide totais com uma fonte independente e saiba quando uma consulta modifica dados. A aula aborda fundamentos necessários à integração, sem pretender formar um administrador de banco completo."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Modelar clientes e pedidos fictícios e consultar vendas por período."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar uma consulta parametrizada e conferir o resultado esperado."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Modelo simples, consultas e evidências dos totais."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A consulta trata períodos e valores corretamente e não concatena entrada livre?"
+                }
+              ]
+            },
+            {
+              "id": "integracao-empresarial",
+              "title": "Integre sistemas e construa indicadores",
+              "number": 18,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/integracao-empresarial.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Transformar dados de origem em informação operacional."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma integração empresarial precisa de contrato, frequência, origem e responsável. Comece por leitura, use dados de estudo e preserve identificadores. Documente atualização, duplicações e divergências. Um indicador precisa de definição, fórmula, período e fonte. Não conecte diretamente um ERP de produção durante a aula. Pratique com uma API simulada e uma base de laboratório antes de adaptar ao ambiente autorizado."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Trazer pedidos de uma API simulada e montar indicador de prazo e volume."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Integrar a base de estudo à interface do projeto e documentar atualização."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Painel conectado ao laboratório com dicionário de indicadores."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Os valores exibidos correspondem à fonte e informam quando foram atualizados?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "10. Publicação e recuperação",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "deploy-servidor",
+              "title": "Deploy em VPS: containers e configuração",
+              "number": 19,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/deploy-servidor.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Preparar e publicar uma aplicação de laboratório em servidor."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Uma aplicação com servidor precisa de runtime, configuração e persistência. Containers ajudam a empacotar o ambiente, mas não resolvem segurança ou operação sozinhos. Separe imagem, variáveis e volumes. Use uma VPS de laboratório ou acompanhe a demonstração quando não houver servidor individual. Antes de publicar, verifique portas, permissões, uso de recursos e caminho de recuperação. Este deploy é exercício do curso, não a implantação do backend da plataforma."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Empacotar uma aplicação de estudo e iniciar com configuração externa."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Preparar o pacote de implantação e validar a saúde em um ambiente de laboratório."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Configuração reproduzível e roteiro de implantação."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "A aplicação reinicia preservando os dados necessários e sem segredos no código?"
+                }
+              ]
+            },
+            {
+              "id": "dominio-segredos",
+              "title": "Domínio, HTTPS, segredos e rollback",
+              "number": 20,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/dominio-segredos.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Operar uma publicação com acesso protegido e recuperação."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "DNS aponta o nome para o serviço; HTTPS protege a comunicação em trânsito. Configure proxy e certificados conforme o ambiente. Segredos devem ficar fora do repositório e do navegador. Registre qual versão foi publicada e como retornar à anterior. Backup precisa ser restaurável; possuir um arquivo não comprova recuperação. O laboratório demonstra proteção, publicação e retorno de versão com dados fictícios."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Mostrar um deploy com domínio de laboratório, configuração de HTTPS e retorno a uma versão anterior."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar checklist de publicação e executar uma recuperação controlada."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Checklist, registro da versão e evidência de rollback."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O aluno consegue recuperar a versão anterior e identificar onde os segredos ficam?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "11. Operação e governança",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "observabilidade-custo",
+              "title": "Logs, monitoramento, avaliação e custo",
+              "number": 21,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/observabilidade-custo.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Acompanhar a qualidade e o funcionamento da solução."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Logs explicam eventos; métricas indicam volume, tempo e falhas; alertas chamam atenção para desvios. Defina critérios de sucesso e um conjunto fixo de tarefas para avaliar modelos e prompts. Conte chamadas, tokens quando disponíveis, tempo e custo estimado. Não compare modelos com entradas diferentes. Monitore também resultado ruim que parece sucesso técnico. Revise logs para retirar dados sensíveis."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Comparar respostas em um pequeno conjunto de testes e simular alerta de erro."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Criar indicadores de execução, qualidade e consumo para o projeto."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Painel ou relatório operacional com linha de base e limites."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Uma resposta incorreta ou custo acima do limite produz um sinal observável?"
+                }
+              ]
+            },
+            {
+              "id": "governanca",
+              "title": "Privacidade, permissões e revisão de segurança",
+              "number": 22,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/governanca.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Definir acesso, uso de dados e responsabilidade pela operação."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Classifique dados, minimize coleta e restrinja permissões. Regras de retenção e tratamento variam por produto, conta e contrato. Registre finalidade, responsável e revisão humana. Dados pessoais exigem análise das regras aplicáveis ao contexto. Teste entrada maliciosa, tentativa de acesso indevido e vazamento por logs. O curso apresenta práticas técnicas; decisões jurídicas específicas devem ser avaliadas pela empresa."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Revisar um projeto fictício com chave exposta, logs excessivos e permissões amplas."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Aplicar checklist de acesso, dados, segredos e ações que precisam de aprovação."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Plano de operação e correções documentadas."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Os acessos são proporcionais e dados sensíveis não aparecem em código público?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "12. Projeto integrado e apresentação",
+          "duration": 180,
+          "lessons": [
+            {
+              "id": "projeto-avancado",
+              "title": "Projeto final: da necessidade à solução integrada",
+              "number": 23,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/projeto-avancado.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Concluir um projeto com interface, fluxo e integração."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "Escolha um processo pequeno: triagem de pedidos, análise de propostas ou resumo operacional. Integre interface, fonte de dados de estudo, automação e uso de IA quando agregar valor. Trabalhe com critérios de aceitação, histórico de mudanças e testes de falha. A entrega precisa ser demonstrável e compreensível por outra pessoa. Não prometa autonomia total quando há etapas de revisão ou limitações conhecidas."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Revisar uma solução de exemplo contra seu briefing e identificar o que ainda falta."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Concluir a implementação e reunir evidências dos critérios e cenários de falha."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Projeto integrado, repositório e checklist de entrega."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "O percurso principal e os erros previstos foram demonstrados?"
+                }
+              ]
+            },
+            {
+              "id": "apresentacao-avancada",
+              "title": "Apresentação, documentação e plano de continuidade",
+              "number": 24,
+              "available": true,
+              "format": "Caderno de aula",
+              "duration": 90,
+              "videoStatus": "Videoaula em preparação",
+              "material": "materiais/aulas/apresentacao-avancada.md",
+              "sections": [
+                {
+                  "title": "Objetivo da aula",
+                  "text": "Entregar uma solução que outra pessoa consegue manter."
+                },
+                {
+                  "title": "Conteúdo de estudo",
+                  "text": "O encerramento explica problema, arquitetura, resultado e limitações. Inclua instalação, execução, testes, publicação, recuperação e responsabilidades. Demonstre o ganho com uma comparação observada, sem inventar economia. Registre o que depende de contratação ou autorização. Um projeto de curso não deve ser apresentado como serviço pronto para operação crítica sem revisão adicional."
+                },
+                {
+                  "title": "Demonstração presencial",
+                  "text": "Apresentar uma demonstração com início, execução, falha controlada e recuperação."
+                },
+                {
+                  "title": "Prática guiada",
+                  "text": "Apresentar o projeto em dez minutos e responder à revisão de um colega."
+                },
+                {
+                  "title": "Sua entrega",
+                  "text": "Dossiê técnico e plano de continuidade com próximos passos."
+                },
+                {
+                  "title": "Como conferir",
+                  "text": "Um colega consegue reproduzir a execução e entende os riscos e custos restantes?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   ],
-  "materials":[
-    {"title":"Roteiro da primeira solução","description":"Defina o problema, os dados de entrada, o resultado e os critérios de conferência.","path":"materiais/roteiro-primeira-solucao.md","type":"Roteiro"},
-    {"title":"Prompt de análise gerencial","description":"Um modelo adaptável para transformar dados em uma análise com critérios claros.","path":"materiais/prompt-analise-gerencial.md","type":"Prompt"},
-    {"title":"Checklist de validação","description":"Confira dados, cálculos, evidências e limites antes de usar uma resposta da IA.","path":"materiais/checklist-validacao.md","type":"Checklist"},
-    {"title":"Skill: análise de dados de trabalho","description":"Uma especificação piloto reutilizável para orientar análises de dados. Ajuste às regras da sua ferramenta.","path":"materiais/skill-analise-dados.md","type":"Skill"}
-  ]
+  "materials": [
+    {
+      "title": "Roteiro da primeira solução",
+      "description": "Defina o problema, os dados de entrada, o resultado e os critérios de conferência.",
+      "path": "materiais/roteiro-primeira-solucao.md",
+      "type": "Roteiro"
+    },
+    {
+      "title": "Prompt de análise gerencial",
+      "description": "Um modelo adaptável para transformar dados em uma análise com critérios claros.",
+      "path": "materiais/prompt-analise-gerencial.md",
+      "type": "Prompt"
+    },
+    {
+      "title": "Checklist de validação",
+      "description": "Confira dados, cálculos, evidências e limites antes de usar uma resposta da IA.",
+      "path": "materiais/checklist-validacao.md",
+      "type": "Checklist"
+    },
+    {
+      "title": "Skill: análise de dados de trabalho",
+      "description": "Uma especificação piloto reutilizável para orientar análises de dados. Ajuste às regras da sua ferramenta.",
+      "path": "materiais/skill-analise-dados.md",
+      "type": "Skill"
+    }
+  ],
+  "version": "curriculo-20261001"
 }
