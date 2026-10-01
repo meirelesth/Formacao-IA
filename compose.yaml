@@ -1,0 +1,17 @@
+services:
+  formacao:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      APP_ORIGIN: "${APP_ORIGIN:?Defina a origem HTTPS da plataforma}"
+      DATABASE_PATH: /data/formacao.sqlite3
+    volumes:
+      - formacao-data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  formacao-data:

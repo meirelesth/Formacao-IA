@@ -1,0 +1,43 @@
+{
+  "courses": [
+    {
+      "id": "basica", "name": "Formação Básica", "description": "ChatGPT, Claude e produtividade aplicada.", "status": "Conteúdo piloto",
+      "modules": [
+        {"name":"1. Do problema à primeira solução", "lessons":[
+          {"id":"problema-real","title":"Comece por um problema real","available":true,"format":"Leitura guiada","material":"materiais/roteiro-primeira-solucao.md","sections":[
+            {"title":"Entenda o problema","text":"Escolha uma tarefa que você repete no trabalho e que consegue avaliar com clareza. Comece por um relatório, uma comparação de propostas ou a organização de informações. Antes de abrir a IA, escreva o que entra na tarefa, o que você faz e qual resultado precisa entregar."},
+            {"title":"Construa junto","steps":["Descreva a tarefa em uma frase: eu preciso transformar uma lista de despesas em um resumo mensal.","Separe uma amostra pequena de dados sem informações pessoais, credenciais ou documentos confidenciais.","Defina o formato de saída: uma tabela por categoria, com valores e observações.","Liste como você vai conferir o resultado: totais, categorias e informações ausentes."]},
+            {"title":"Aplique no trabalho","text":"Use o roteiro para construir uma primeira versão com dados de exemplo. Compare a resposta com o resultado esperado. Só avance para dados e processos reais depois de entender as limitações e obter as permissões necessárias."},
+            {"title":"Seu desafio","text":"Preencha o roteiro com uma tarefa da sua rotina. A entrega desta aula é uma descrição do problema, uma amostra de entrada e três critérios de conferência."}
+          ]},
+          {"id":"pedido-claro","title":"Transforme sua tarefa em um pedido claro","available":true,"format":"Leitura guiada","material":"materiais/prompt-analise-gerencial.md","sections":[
+            {"title":"Dê contexto e defina a entrega","text":"Um pedido útil explica o objetivo, informa quais dados podem ser usados e define como a resposta deve ser organizada. Escrever mais não garante um resultado melhor. Escrever de forma específica ajuda a reduzir ambiguidades."},
+            {"title":"Construa junto","steps":["Informe o objetivo: comparar três propostas de fornecedores.","Descreva as colunas disponíveis: produto, quantidade, preço, frete e prazo.","Peça uma tabela comparativa e uma lista de informações que faltam.","Determine que a IA não invente preços, tributos, condições ou prazos ausentes.","Confira os cálculos e as conclusões antes de usar o resultado."]},
+            {"title":"Aplique no trabalho","text":"Teste o modelo de pedido no ChatGPT ou no Claude com dados de exemplo. Guarde o pedido, a resposta e as correções que precisou fazer. Você terá uma base reutilizável para tarefas semelhantes."},
+            {"title":"Seu desafio","text":"Adapte o prompt para a tarefa da primeira aula. Defina o formato da entrega e o que a IA deve fazer quando não houver informação suficiente."}
+          ]},
+          {"id":"validar-resultado","title":"Confira o resultado antes de aplicar","available":true,"format":"Leitura guiada","material":"materiais/checklist-validacao.md","sections":[
+            {"title":"Uma resposta convincente precisa ser conferida","text":"Textos claros e tabelas bem organizadas podem conter erros. Confira se os dados foram interpretados corretamente, se os cálculos fecham e se as conclusões têm apoio nas informações de entrada."},
+            {"title":"Construa junto","steps":["Compare os totais da resposta com os dados originais.","Confira unidades, períodos, moeda e critérios de classificação.","Identifique informações inventadas, omitidas ou tratadas como certeza sem evidência.","Teste uma entrada incompleta e outra com uma situação fora do padrão.","Registre quem revisa o resultado e quais ações precisam de aprovação humana."]},
+            {"title":"Aplique no trabalho","text":"Escolha uma resposta produzida na aula anterior e preencha o checklist. Corrija o pedido ou os dados quando identificar erros. Automatize somente depois de ter uma forma de detectar falhas e interromper ações incorretas."},
+            {"title":"Seu desafio","text":"Escreva três testes para sua primeira solução: um caso comum, um com informação ausente e um com resultado inesperado. Explique como você reconhece uma resposta aceitável."}
+          ]}
+        ]},
+        {"name":"2. Documentos e produtividade", "lessons":[{"id":"documentos","title":"Organize e analise documentos","available":false},{"id":"relatorios","title":"Construa relatórios e apresentações","available":false}]},
+        {"name":"3. Dados e indicadores", "lessons":[{"id":"planilhas","title":"Prepare sua planilha para análise","available":false},{"id":"indicadores","title":"Transforme dados em indicadores","available":false}]},
+        {"name":"4. Conexões e primeiras rotinas", "lessons":[{"id":"conexoes","title":"Conecte arquivos, e-mail e calendário","available":false},{"id":"rotinas","title":"Desenhe sua primeira rotina com IA","available":false}]}
+      ]
+    },
+    {"id":"avancada","name":"Formação Avançada","description":"Automações, agentes e integrações.","status":"Em preparação","modules":[
+      {"name":"1. Automação entre sistemas","lessons":[{"id":"apis","title":"APIs e webhooks na prática","available":false},{"id":"n8n","title":"Construa um fluxo de automação","available":false}]},
+      {"name":"2. Agentes e conhecimento","lessons":[{"id":"agentes","title":"Desenhe um agente com limites claros","available":false},{"id":"rag","title":"Conecte documentos e bases de conhecimento","available":false}]},
+      {"name":"3. Projetos empresariais","lessons":[{"id":"integracoes","title":"Integre dados e processos empresariais","available":false},{"id":"operacao","title":"Monitore, teste e mantenha sua solução","available":false}]}
+    ]}
+  ],
+  "materials":[
+    {"title":"Roteiro da primeira solução","description":"Defina o problema, os dados de entrada, o resultado e os critérios de conferência.","path":"materiais/roteiro-primeira-solucao.md","type":"Roteiro"},
+    {"title":"Prompt de análise gerencial","description":"Um modelo adaptável para transformar dados em uma análise com critérios claros.","path":"materiais/prompt-analise-gerencial.md","type":"Prompt"},
+    {"title":"Checklist de validação","description":"Confira dados, cálculos, evidências e limites antes de usar uma resposta da IA.","path":"materiais/checklist-validacao.md","type":"Checklist"},
+    {"title":"Skill: análise de dados de trabalho","description":"Uma especificação piloto reutilizável para orientar análises de dados. Ajuste às regras da sua ferramenta.","path":"materiais/skill-analise-dados.md","type":"Skill"}
+  ]
+}
