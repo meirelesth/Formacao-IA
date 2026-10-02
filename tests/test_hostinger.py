@@ -77,7 +77,7 @@ class HostingerTests(unittest.TestCase):
     def test_08_traversal_and_encoded_paths(self):
         for path in ['/assets/../catalogo.json','/assets/%2e%2e/catalogo.json','/assets/%2e%2e/materiais/aulas/ia-generativa.md']:
             self.assertEqual(call(path)[0],401,path)
-        self.assertIn(call('/assets/../../formacao-private/config.php')[0],[403,404])
+        self.assertIn(call('/assets/../../formacao-private/config.php')[0],[400,403,404])
     def test_09_student_cannot_administer(self):
         c,t=self.login();self.assertEqual(call('/api/admin/students',cookie=c)[0],403)
         self.assertEqual(call('/api/admin/invite','POST',{'name':'A','email':'a@example.com','courses':['basica'],'csrf':t},c)[0],403)

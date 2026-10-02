@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
-umask(0077);require __DIR__.'/app/App.php';require __DIR__.'/vendor/autoload.php';
+umask(0077);require_once __DIR__.'/app/App.php';require __DIR__.'/vendor/autoload.php';
 $config=require __DIR__.'/config.php';$app=new FormacaoApp($config,dirname(__DIR__).'/public_html',__DIR__);
 // One runner; the queue remains durable across requests and cron restarts.
 $lock=fopen(__DIR__.'/.mail.lock','c+');if(!$lock||!flock($lock,LOCK_EX|LOCK_NB))exit;
