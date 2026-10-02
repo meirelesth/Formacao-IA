@@ -141,4 +141,7 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call('/api/activate','POST',{'token':'bad','password':'short'})[0],400)
     def test_24_health_and_unrecognized_method(self):
         self.assertTrue(call('/healthz')[2]['ok']);self.assertEqual(call('/api/session','DELETE')[0],405)
+    def test_25_full_recovery_queue_has_generic_response_and_stays_bounded(self):
+        fixture('fill-queue');a=call('/api/forgot-password','POST',{'email':'a@example.com'});b=call('/api/forgot-password','POST',{'email':'unknown@example.com'})
+        self.assertEqual(a[0],200);self.assertEqual(a[2],b[2]);self.assertEqual(len(json.loads(fixture('inspect'))['jobs']),1000)
 if __name__=='__main__':unittest.main(verbosity=2)

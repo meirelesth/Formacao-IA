@@ -17,4 +17,8 @@ elseif($mode==='idle-session')$app->query('UPDATE sessions SET last_seen=0');
 elseif($mode==='expire-token')$app->query('UPDATE access_tokens SET expires=0');
 elseif($mode==='inspect'){
     $users=$app->query('SELECT email,password,role,active FROM users')->fetchAll();$tokens=$app->query('SELECT token_hash,used FROM access_tokens')->fetchAll();$sessions=$app->query('SELECT token_hash,csrf FROM sessions')->fetchAll();$jobs=$app->query('SELECT email FROM mail_jobs')->fetchAll();echo json_encode(compact('users','tokens','sessions','jobs'));
+}elseif($mode==='fill-queue'){
+    $app->db->beginTransaction();
+    for($i=0;$i<1000;$i++)$app->query('INSERT INTO mail_jobs(email,purpose,available,created) VALUES(?,?,?,?)',['queued@example.com','reset',time(),time()]);
+    $app->db->commit();
 }elseif($mode==='run-cron')require '/var/www/formacao-private/cron.php';

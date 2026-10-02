@@ -147,8 +147,12 @@ final class FormacaoApp {
             $email=$data['email']??'';if(!is_string($email)||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL))$this->fail(400,'Informe um e-mail válido.');$email=strtolower(trim($email));
             if($this->limited('reset-ip:'.$ip,10)||$this->limited('reset-email:'.$email,5))$this->fail(429,'Muitas solicitações. Aguarde 15 minutos.');
             // Same durable queue write for known and unknown addresses. SMTP runs in cron.
+            $this->db->beginTransaction();$queueLock=hash('sha256','mail-queue');
+            $this->query('INSERT IGNORE INTO limits(key_hash,window_start,count) VALUES(?,?,0)',[$queueLock,time()]);
+            $this->query('SELECT key_hash FROM limits WHERE key_hash=? FOR UPDATE',[$queueLock]);
             $this->query('DELETE FROM mail_jobs WHERE created<?',[time()-86400]);
-            $this->query('INSERT INTO mail_jobs(email,purpose,available,created) SELECT ?,?,?,? FROM DUAL WHERE (SELECT COUNT(*) FROM mail_jobs)<1000',[$email,'reset',time(),time()]);
+            if((int)$this->query('SELECT COUNT(*) FROM mail_jobs')->fetchColumn()<1000)$this->query('INSERT INTO mail_jobs(email,purpose,available,created) VALUES(?,?,?,?)',[$email,'reset',time(),time()]);
+            $this->db->commit();
             $this->json(200,['ok'=>true,'message'=>'Se o e-mail estiver autorizado, enviaremos as instruções. Caso não receba, solicite ajuda ao professor.']);
         }
         if(in_array($path,['/api/activate','/api/reset-password'],true)&&$method==='POST'){
