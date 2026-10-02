@@ -24,8 +24,13 @@ final class FormacaoApp {
     public function install(): void {
         foreach(explode(';',file_get_contents($this->private.'/schema.sql')) as $sql) if(trim($sql)!=='') $this->db->exec($sql);
     }
+    public static function validPassword(string $password): bool {
+        if(strlen($password)>1024||str_contains($password,"\0"))return false;
+        $characters=preg_match_all('/./us',$password);
+        return $characters!==false&&$characters>=12&&$characters<=256;
+    }
     public static function hashPassword(string $password): string {
-        if (strlen($password)<12 || strlen($password)>256 || str_contains($password,"\0")) throw new InvalidArgumentException('Invalid password');
+        if (!self::validPassword($password)) throw new InvalidArgumentException('Invalid password');
         if (defined('PASSWORD_ARGON2ID')) return password_hash($password,PASSWORD_ARGON2ID,['memory_cost'=>32768,'time_cost'=>3,'threads'=>1]);
         $salt=bin2hex(random_bytes(16));
         return 'pbkdf2$'.$salt.'$'.hash_pbkdf2('sha256',$password,hex2bin($salt),600000,64);
@@ -117,7 +122,7 @@ final class FormacaoApp {
         if($path==='/api/session'&&$method==='GET')$this->json(200,$session?['authenticated'=>true,'user'=>['name'=>$session['name'],'email'=>$session['email'],'role'=>$session['role']],'csrf'=>$session['csrf']]:['authenticated'=>false]);
         if($path==='/api/login'&&$method==='POST'){
             $email=$data['email']??'';$password=$data['password']??'';
-            if(!is_string($email)||!is_string($password)||strlen($email)>254||strlen($password)>256||str_contains($password,"\0"))$this->fail(400,'Dados de acesso inválidos.');
+            if(!is_string($email)||!is_string($password)||strlen($email)>254||strlen($password)>1024||str_contains($password,"\0"))$this->fail(400,'Dados de acesso inválidos.');
             $email=strtolower(trim($email));
             if($this->limited('login-ip:'.$ip,20)||$this->limited('login-email:'.$email,5))$this->fail(429,'Muitas tentativas. Aguarde 15 minutos.');
             $user=$this->query('SELECT * FROM users WHERE email=?',[$email])->fetch();
@@ -142,13 +147,14 @@ final class FormacaoApp {
             $email=$data['email']??'';if(!is_string($email)||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL))$this->fail(400,'Informe um e-mail válido.');$email=strtolower(trim($email));
             if($this->limited('reset-ip:'.$ip,10)||$this->limited('reset-email:'.$email,5))$this->fail(429,'Muitas solicitações. Aguarde 15 minutos.');
             // Same durable queue write for known and unknown addresses. SMTP runs in cron.
-            $this->query('INSERT INTO mail_jobs(email,purpose,available,created) VALUES(?,?,?,?)',[$email,'reset',time(),time()]);
+            $this->query('DELETE FROM mail_jobs WHERE created<?',[time()-86400]);
+            $this->query('INSERT INTO mail_jobs(email,purpose,available,created) SELECT ?,?,?,? FROM DUAL WHERE (SELECT COUNT(*) FROM mail_jobs)<1000',[$email,'reset',time(),time()]);
             $this->json(200,['ok'=>true,'message'=>'Se o e-mail estiver autorizado, enviaremos as instruções. Caso não receba, solicite ajuda ao professor.']);
         }
         if(in_array($path,['/api/activate','/api/reset-password'],true)&&$method==='POST'){
             if($this->limited('token-ip:'.$ip,20))$this->fail(429,'Muitas tentativas. Aguarde 15 minutos.');
             $raw=$data['token']??null;$password=$data['password']??null;
-            if(!is_string($raw)||strlen($raw)>128||!is_string($password)||strlen($password)<12||strlen($password)>256||str_contains($password,"\0"))$this->fail(400,'Use o link de acesso e uma senha de 12 a 256 caracteres.');
+            if(!is_string($raw)||strlen($raw)>128||!is_string($password)||!self::validPassword($password))$this->fail(400,'Use o link de acesso e uma senha de 12 a 256 caracteres.');
             $purpose=$path==='/api/activate'?'invite':'reset';$hash=self::hashPassword($password);$this->db->beginTransaction();
             $t=$this->query('SELECT * FROM access_tokens WHERE token_hash=? AND purpose=? AND used=0 AND expires>? FOR UPDATE',[hash('sha256',$raw),$purpose,time()])->fetch();
             if(!$t){$this->db->rollBack();$this->fail(400,'Link inválido ou expirado.');}

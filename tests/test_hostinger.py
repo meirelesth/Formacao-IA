@@ -87,7 +87,8 @@ class HostingerTests(unittest.TestCase):
         data['otp']=otp(self.secret);self.assertEqual(call('/api/login','POST',data)[0],200)
         self.assertEqual(call('/api/login','POST',data)[0],401)
     def test_11_invitation_and_single_use(self):
-        raw=self.invite();p={'token':raw,'password':'new-password-123456'}
+        raw=self.invite();self.assertEqual(call('/api/activate','POST',{'token':raw,'password':'😀'*3})[0],400)
+        p={'token':raw,'password':'new-password-123456'}
         self.assertEqual(call('/api/activate','POST',p)[0],200);self.assertEqual(call('/api/activate','POST',p)[0],400)
         c,_=self.login('new@example.com','new-password-123456');self.assertEqual([x['id'] for x in call('/catalogo.json',cookie=c)[2]['courses']],['basica'])
         self.assertNotIn(raw,[x['token_hash'] for x in json.loads(fixture('inspect'))['tokens']])

@@ -33,7 +33,7 @@ final class FormacaoSetup {
                     $name=$_POST['name']??'';$email=$_POST['email']??'';$password=$_POST['password']??'';$confirm=$_POST['confirm']??'';$code=$_POST['otp']??'';
                     $valid=is_string($code)&&preg_match('/^[0-9]{6}$/D',$code);$step=null;
                     if($valid)foreach([intdiv(time(),30),intdiv(time(),30)-1,intdiv(time(),30)+1] as $candidate)if(hash_equals(FormacaoApp::totp($factor['secret'],$candidate),$code))$step=$candidate;
-                    if(!is_string($name)||trim($name)===''||strlen($name)>120||!is_string($email)||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL)||!is_string($password)||$password!==$confirm||strlen($password)<12||strlen($password)>256||str_contains($password,"\0")||$step===null){
+                    if(!is_string($name)||trim($name)===''||strlen($name)>120||!is_string($email)||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL)||!is_string($password)||$password!==$confirm||!FormacaoApp::validPassword($password)||$step===null){
                         $attempt['count']++;self::save($attemptPath,$attempt);$error='Confira nome, e-mail, senha de 12 a 256 caracteres, confirmação e código do autenticador.';
                     } else {
                         $oldConfig=$config;$hash=FormacaoApp::hashPassword($password);$config['admin_totp_secret']=$factor['secret'];$config['dummy_hash']=FormacaoApp::hashPassword(FormacaoApp::rawToken());$config['setup_key']='';

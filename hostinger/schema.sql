@@ -35,5 +35,5 @@ CREATE TABLE IF NOT EXISTS mail_jobs (
  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, email VARCHAR(254) NOT NULL,
  purpose VARCHAR(16) NOT NULL, token_hash CHAR(64) NULL,
  attempts INT NOT NULL DEFAULT 0, available BIGINT NOT NULL, created BIGINT NOT NULL,
- INDEX mail_due(available)
+ INDEX mail_due(available), INDEX mail_created(created)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
