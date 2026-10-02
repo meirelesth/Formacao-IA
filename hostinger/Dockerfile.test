@@ -1,0 +1,7 @@
+FROM php:8.3-apache
+RUN docker-php-ext-install pdo_mysql && a2enmod rewrite && sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf && sed -i 's/:80>/:8080>/' /etc/apache2/sites-available/000-default.conf
+COPY build/hostinger/public_html/ /var/www/html/
+COPY build/hostinger/formacao-private/ /var/www/formacao-private/
+COPY tests/hostinger-fixture.php /tmp/hostinger-fixture.php
+RUN chown -R www-data:www-data /var/www/formacao-private
+CMD ["sh", "-c", "php /tmp/hostinger-fixture.php configure && apache2-foreground"]

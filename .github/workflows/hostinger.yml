@@ -1,0 +1,68 @@
+name: Validate Hostinger PHP MySQL
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: formacao_test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test-only-password
+          MYSQL_ROOT_PASSWORD: root-test-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot-test-only-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, openssl
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lint PHP
+        run: find hostinger tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Audit PHP dependencies
+        run: |
+          composer install --working-dir=hostinger --no-dev --no-interaction --prefer-dist
+          composer audit --working-dir=hostinger
+      - name: Build deployment package
+        run: python hostinger/package.py --output build/hostinger
+      - name: Start Apache PHP MySQL integration environment
+        run: |
+          docker build -f hostinger/Dockerfile.test -t formacao-php-test .
+          docker run -d --name lf-hostinger --network host -e LF_TEST_ALLOW=1 formacao-php-test
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break || sleep 1; done
+      - name: Validate installation, authentication and student privacy
+        run: python tests/test_hostinger.py
+      - name: Install browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Validate responsive frontend with PHP backend
+        run: node tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Formacao-IA-Hostinger-validated
+          path: build/Formacao-IA-Hostinger.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hostinger-responsive-evidence
+          path: browser-results/

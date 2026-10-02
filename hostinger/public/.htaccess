@@ -1,0 +1,9 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+RewriteEngine On
+# Toda requisição passa pelo controle central, inclusive materiais e catálogo.
+RewriteRule ^lf-router\.php$ - [L]
+RewriteRule ^ lf-router.php [END]
+<FilesMatch "(?i)\.(env|sql|sqlite3|bak|log|zip|ini)$">
+  Require all denied
+</FilesMatch>

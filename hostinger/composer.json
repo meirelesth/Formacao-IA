@@ -1,0 +1,6 @@
+{
+  "name": "luisfernando/formacao-hostinger",
+  "description": "Backend privado da Formação Prática em IA",
+  "require": {"php": ">=8.3", "ext-pdo": "*", "ext-pdo_mysql": "*", "ext-openssl": "*", "phpmailer/phpmailer": "7.1.1"},
+  "config": {"allow-plugins": false, "sort-packages": true}
+}
