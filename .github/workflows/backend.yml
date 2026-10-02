@@ -23,3 +23,17 @@ jobs:
           node --check acesso.js
           node --check admin.js
       - run: docker build -t formacao-backend .
+      - name: Install browser for responsive validation
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Validate mobile and desktop interfaces
+        run: |
+          APP_ORIGIN=http://127.0.0.1:8080 DATABASE_PATH=/tmp/browser-test.sqlite3 python -m server.app serve > /tmp/formacao-test.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break || sleep 1; done
+          node tests/browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsive-browser-evidence
+          path: browser-results/

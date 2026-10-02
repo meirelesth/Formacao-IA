@@ -15,6 +15,7 @@ from http.cookies import SimpleCookie, CookieError
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 from server.access import Access
+from server.security import otp_step
 
 SITE = Path(os.environ.get('SITE_ROOT', str(Path(__file__).resolve().parent.parent))).resolve()
 SESSION_SECONDS = 8 * 3600
@@ -37,6 +38,11 @@ class Application(Access):
         if parsed.scheme not in ('http', 'https') or not parsed.netloc or parsed.path:
             raise ValueError('APP_ORIGIN deve ser uma origem HTTP(S), sem caminho.')
         self.secure = parsed.scheme == 'https'
+        self.admin_totp_secret = os.environ.get('ADMIN_TOTP_SECRET','').strip().upper()
+        if self.admin_totp_secret:
+            import base64
+            if len(base64.b32decode(self.admin_totp_secret+'='*((-len(self.admin_totp_secret))%8))) < 20:
+                raise ValueError('ADMIN_TOTP_SECRET deve ter pelo menos 160 bits.')
         self.database.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as db:
             db.executescript('''
@@ -80,7 +86,14 @@ class Application(Access):
             return None
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         with self.connect() as db:
-            return db.execute('SELECT s.*,u.name,u.email,u.role,u.active,u.courses FROM sessions s JOIN users u ON u.id=s.user_id WHERE token_hash=? AND expires>? AND u.active=1', (token_hash,int(time.time()))).fetchone()
+            row = db.execute('SELECT s.*,u.name,u.email,u.role,u.active,u.courses FROM sessions s JOIN users u ON u.id=s.user_id WHERE token_hash=? AND expires>? AND u.active=1', (token_hash,int(time.time()))).fetchone()
+            if row:
+                now=int(time.time()); idle=900 if row['role']=='admin' else 1800
+                if row['last_seen'] < now-idle:
+                    db.execute('DELETE FROM sessions WHERE token_hash=?',(token_hash,))
+                    return None
+                db.execute('UPDATE sessions SET last_seen=? WHERE token_hash=?',(now,token_hash))
+            return row
 
     def __call__(self, environ, start_response):
         method = environ.get('REQUEST_METHOD','GET')
@@ -91,6 +104,7 @@ class Application(Access):
             body = json.dumps(payload,ensure_ascii=False).encode() if content_type.startswith('application/json') else payload
             start_response(status, headers + [('Content-Type',content_type),('Content-Length',str(len(body))),('Cache-Control','no-store')] + (extra or []))
             return [body]
+        if '\x00' in path: return respond('400 Bad Request',{'error':'Caminho inválido.'})
         if path=='/healthz' and method=='GET':
             with self.connect() as db: db.execute('SELECT 1').fetchone()
             return respond('200 OK',{'ok':True})
@@ -137,15 +151,22 @@ class Application(Access):
                 valid=password_matches(password,user['password'] if user else self.dummy_hash)
                 if not user or not valid or not user['active']:
                     return respond('401 Unauthorized',{'error':'E-mail ou senha inválidos.'})
+                if user['role']=='admin':
+                    step=otp_step(self.admin_totp_secret,data.get('otp'))
+                    if step is None: return respond('401 Unauthorized',{'error':'Acesso inválido. Confira a senha e o código do autenticador.'})
+                    if db.execute('SELECT 1 FROM otp_used WHERE user_id=? AND step>=?',(user['id'],step)).fetchone():
+                        return respond('401 Unauthorized',{'error':'Código já utilizado. Aguarde o próximo código.'})
+                    db.execute('INSERT INTO otp_used(user_id,step) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET step=excluded.step',(user['id'],step))
+                db.execute('INSERT INTO audit(actor,event,target,created) VALUES(?,?,NULL,?)',(user['id'],'login',now))
                 token=secrets.token_urlsafe(32); csrf=secrets.token_urlsafe(32)
                 if session: db.execute('DELETE FROM sessions WHERE token_hash=?',(session['token_hash'],))
-                db.execute('INSERT INTO sessions VALUES(?,?,?,?)',(hashlib.sha256(token.encode()).hexdigest(),user['id'],csrf,now+SESSION_SECONDS))
+                db.execute('INSERT INTO sessions(token_hash,user_id,csrf,expires,last_seen) VALUES(?,?,?,?,?)',(hashlib.sha256(token.encode()).hexdigest(),user['id'],csrf,now+SESSION_SECONDS,now))
             cookie=f'lf_session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age={SESSION_SECONDS}' + ('; Secure' if self.secure else '')
             return respond('200 OK',{'user':{'name':user['name'],'email':user['email'],'role':user['role']},'csrf':csrf},[('Set-Cookie',cookie)])
         if path.startswith('/api/'):
             if not session:
                 return respond('401 Unauthorized',{'error':'Entre para acessar sua formação.'})
-            if method != 'GET' and not hmac.compare_digest(str(data.get('csrf','')),session['csrf']):
+            if method != 'GET' and not hmac.compare_digest(str(data.get('csrf','')).encode(),session['csrf'].encode()):
                 return respond('403 Forbidden',{'error':'Sessão inválida. Recarregue a página.'})
             if path == '/api/logout' and method == 'POST':
                 with self.connect() as db: db.execute('DELETE FROM sessions WHERE token_hash=?',(session['token_hash'],))
@@ -177,7 +198,7 @@ class Application(Access):
             if not session: return respond('401 Unauthorized',{'error':'Entre para acessar o material.'})
             if not self.allowed_material(session,path.lstrip('/')): return respond('403 Forbidden',{'error':'Material não incluído na sua matrícula.'})
         target=(self.site/path.lstrip('/')).resolve()
-        public_names={'index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico'}
+        public_names={'index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico','certificado.css','certificado.js'}
         relative=path.lstrip('/')
         public=relative in public_names or relative.startswith(('assets/','materiais/'))
         if not public or not target.is_relative_to(self.site) or not target.is_file() or target.suffix not in {'.html','.css','.js','.json','.jpg','.png','.svg','.md','.ico','.pdf'}:

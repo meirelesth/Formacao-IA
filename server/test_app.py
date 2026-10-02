@@ -23,7 +23,9 @@ class AuthenticationTests(unittest.TestCase):
         return result
 
     def login(self,email='a@example.com',password='senha-local-123456'):
-        r=self.request('/api/login','POST',{'email':email,'password':password})
+        from server.security import totp
+        otp=totp(self.app.admin_totp_secret) if email=='teacher@example.com' else ''
+        r=self.request('/api/login','POST',{'email':email,'password':password,'otp':otp})
         self.assertEqual(r['status'],200)
         return r['headers']['Set-Cookie'].split(';')[0],r['body']['csrf']
 

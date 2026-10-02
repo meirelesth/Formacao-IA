@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130" role="img" aria-labelledby="title desc"><title id="title">Modelo demonstrativo de certificado de conclusão</title><desc id="desc">Certificado de Formação Prática em IA, de Luís Fernando. Modelo sem validade, em azul-marinho, creme e dourado.</desc>
+<defs><pattern id="lines" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M0 36L36 0" stroke="#c69755" stroke-width=".6" opacity=".18"/></pattern></defs>
+<rect width="1600" height="1130" fill="#f6f2ea"/><rect x="34" y="34" width="1532" height="1062" rx="4" fill="none" stroke="#c69755"/><rect x="49" y="49" width="1502" height="1032" fill="none" stroke="#d9d2c6"/>
+<path d="M0 0H260V1130H0Z" fill="#0f1a2b"/><rect width="260" height="1130" fill="url(#lines)"/>
+<text x="128" y="205" text-anchor="middle" font-family="Arial,sans-serif" font-size="86" font-weight="bold" letter-spacing="-8" fill="#fffdf8">L<tspan fill="#e0b76e">F</tspan></text>
+<path d="M82 240H178" stroke="#c69755"/><text transform="translate(146 800) rotate(-90)" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" letter-spacing="8" fill="#e0b76e">APRENDA. CONSTRUA. APLIQUE.</text>
+<g font-family="Arial,sans-serif" fill="#0f1a2b"><text x="340" y="155" font-size="19" font-weight="bold" letter-spacing="4">LUÍS FERNANDO</text><text x="340" y="187" font-size="13" letter-spacing="3" fill="#5b6067">FORMAÇÃO PRÁTICA EM INTELIGÊNCIA ARTIFICIAL</text>
+<text x="340" y="302" font-size="65" font-family="Georgia,serif">Certificado</text><text x="344" y="351" font-size="16" letter-spacing="7" fill="#96703c">DE CONCLUSÃO</text><path d="M344 388H1470" stroke="#d9d2c6"/>
+<text x="344" y="449" font-size="21" fill="#5b6067">Conferido a</text><text x="340" y="522" font-size="56" font-family="Georgia,serif">Nome do aluno</text><path d="M344 552H1370" stroke="#c69755"/>
+<text x="344" y="611" font-size="21" fill="#5b6067">pela conclusão da jornada de aprendizagem</text><text x="344" y="662" font-size="31" font-weight="bold">Formação Prática em IA · Avançado</text><text x="344" y="710" font-size="19" fill="#5b6067">Carga horária de 20 horas · Aulas ao vivo e construção de projeto</text>
+<text x="344" y="767" font-size="17" fill="#5b6067">Inteligência artificial, automações, indicadores, sites e sistemas.</text>
+<path d="M344 885H735" stroke="#0f1a2b"/><text x="344" y="921" font-size="19" font-weight="bold">Luís Fernando</text><text x="344" y="950" font-size="15" fill="#5b6067">Instrutor · Formação Prática em IA</text>
+<text x="960" y="905" font-size="14" letter-spacing="2" fill="#96703c">DATA DE CONCLUSÃO</text><text x="960" y="941" font-size="21">DD / MM / AAAA</text>
+<text x="344" y="1027" font-size="13" fill="#5b6067">luisfernando.online</text><text x="1465" y="1027" text-anchor="end" font-size="13" fill="#96703c" letter-spacing="1">MODELO DEMONSTRATIVO · SEM VALIDADE</text></g>
+<circle cx="1400" cy="155" r="55" fill="none" stroke="#c69755"/><circle cx="1400" cy="155" r="46" fill="none" stroke="#c69755" opacity=".5"/><path d="M1378 155L1393 170L1424 139" fill="none" stroke="#c69755" stroke-width="4"/>
+</svg>

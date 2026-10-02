@@ -44,3 +44,19 @@ Videoaulas e emissão automática de certificados não foram implementadas. O ce
 `python -m unittest discover -s server -p 'test_*.py' -v`
 `node --check entrar.js` (também acesso.js, admin.js e aluno.js)
 Os testes locais não substituem validação de DNS, TLS, SMTP, backup e acessos no servidor real. Não afirmar “100% em produção” antes de executar esses checks.
+
+## Controles adicionais e limites da revisão — 02/10/2026
+
+O administrador precisa de senha e TOTP de seis dígitos. Configure `ADMIN_TOTP_SECRET` antes de criar a conta; sem essa chave o login administrativo permanece bloqueado. Gere a chave **no servidor**, sem publicar no repositório:
+
+```sh
+python -c "import secrets,base64; print(base64.b32encode(secrets.token_bytes(20)).decode())"
+```
+
+Cadastre a chave no aplicativo autenticador (TOTP SHA-1, seis dígitos, período de 30 segundos), guarde uma cópia offline e salve somente no `.env` com permissão 600. Esta configuração destina-se a uma única conta administrativa do professor. Não compartilhe a conta. Trocar a chave exige invalidar sessões administrativas no banco e recadastrar o autenticador. Não existe recuperação pública do segundo fator.
+
+Sessões expiram após oito horas, ou após 30 minutos sem requisições para alunos e 15 minutos para administração. Códigos TOTP usados não podem ser reutilizados. A recuperação envia e-mail em uma fila limitada em memória, sem esperar SMTP na resposta pública. Reinícios ou falha de SMTP podem interromper a entrega: o professor pode gerar um novo link pelo painel. Isso não é uma fila durável nem garantia de entrega. Não há rastreamento externo nas páginas de acesso. Senhas, tokens e chaves não devem aparecer nos logs.
+
+O SQLite e os backups contêm nomes, e-mails e progresso: precisam de armazenamento restrito, backups **criptografados** fora do servidor e política de retenção. A aplicação não criptografa o arquivo SQLite por conta própria. Nunca copie banco, `.env`, backups ou certificados individuais para o GitHub público. O certificado público é um modelo sem dados pessoais e sem validade; ainda não há assinatura digital criptográfica nem serviço de verificação de certificados emitidos.
+
+A limitação de tentativas usa `REMOTE_ADDR`, sem confiar em cabeçalhos enviados pelo visitante. Atrás do proxy, o limite pode ser compartilhado; configure também limites no proxy antes da abertura aos alunos. Testes de código e navegador não equivalem a teste de invasão independente. A liberação em produção exige validar HTTPS, cabeçalhos, controle de acesso, SMTP real, restauração de backup, atualizações de dependências, monitoramento e resposta a incidentes no servidor efetivamente contratado. O GitHub Pages hospeda apenas a parte pública; não executa este backend.

@@ -9,6 +9,7 @@ import ssl
 import time
 from email.message import EmailMessage
 from urllib.parse import quote
+from server.security import recovery_async
 
 def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
@@ -19,6 +20,11 @@ class Access:
             columns={r['name'] for r in db.execute('PRAGMA table_info(users)')}
             for name, definition in [('role', "TEXT NOT NULL DEFAULT 'student'"), ('active','INTEGER NOT NULL DEFAULT 1'),('courses',"TEXT NOT NULL DEFAULT '[\"basica\",\"avancada\"]'")]:
                 if name not in columns: db.execute(f'ALTER TABLE users ADD COLUMN {name} {definition}')
+            session_columns={r['name'] for r in db.execute('PRAGMA table_info(sessions)')}
+            if 'last_seen' not in session_columns:
+                db.execute('ALTER TABLE sessions ADD COLUMN last_seen INTEGER NOT NULL DEFAULT 0')
+                db.execute('DELETE FROM sessions') # Invalidate old sessions on migration.
+            db.execute('CREATE TABLE IF NOT EXISTS otp_used(user_id INTEGER PRIMARY KEY,step INTEGER NOT NULL)')
             db.executescript('''CREATE TABLE IF NOT EXISTS access_tokens(token_hash TEXT PRIMARY KEY,purpose TEXT NOT NULL,email TEXT NOT NULL,name TEXT NOT NULL,courses TEXT NOT NULL,user_id INTEGER,expires INTEGER NOT NULL,used INTEGER NOT NULL DEFAULT 0);
                 CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,actor INTEGER,event TEXT NOT NULL,target TEXT,created INTEGER NOT NULL);''')
 
@@ -57,7 +63,7 @@ class Access:
 
     def mail(self,email,link,purpose):
         host=os.environ.get('SMTP_HOST')
-        if not host: return False
+        if not host or not os.environ.get('SMTP_FROM'): return False
         msg=EmailMessage();msg['From']=os.environ['SMTP_FROM'];msg['To']=email
         msg['Subject']='Seu acesso à Formação IA Luís Fernando' if purpose=='invite' else 'Redefina sua senha — Formação IA Luís Fernando'
         msg.set_content('Use o link para '+('ativar seu acesso (válido por 48 horas)' if purpose=='invite' else 'redefinir sua senha (válido por 30 minutos)')+':\n\n'+link+'\n\nSe não reconhece esta solicitação, ignore esta mensagem.')
@@ -96,16 +102,12 @@ class Access:
             if not isinstance(email,str) or len(email)>254: return respond('400 Bad Request',{'error':'Informe um e-mail válido.'})
             if self.limited('reset-ip:'+environ.get('REMOTE_ADDR',''),10) or self.limited('reset-email:'+digest(email.strip().lower())):
                 return respond('429 Too Many Requests',{'error':'Muitas solicitações. Aguarde 15 minutos.'})
-            with self.connect() as db: user=db.execute('SELECT id FROM users WHERE email=? AND active=1',(email.strip().lower(),)).fetchone()
-            if user and os.environ.get('SMTP_HOST'):
-                raw=self.token('reset',email.strip().lower(),user_id=user['id'])
-                try: self.mail(email.strip().lower(),self.origin+'/redefinir.html#'+raw,'reset')
-                except (OSError,smtplib.SMTPException): pass
+            recovery_async(self,email.strip().lower())
             return respond('200 OK',{'ok':True,'message':'Se o e-mail estiver autorizado, enviaremos as instruções. Caso não receba, solicite ajuda ao professor.'})
         if not path.startswith('/api/admin/'): return None
         if not session: return respond('401 Unauthorized',{'error':'Entre para continuar.'})
         if session['role']!='admin': return respond('403 Forbidden',{'error':'Acesso exclusivo da administração.'})
-        if method!='GET' and not secrets.compare_digest(str(data.get('csrf','')),session['csrf']): return respond('403 Forbidden',{'error':'Sessão inválida.'})
+        if method!='GET' and not secrets.compare_digest(str(data.get('csrf','')).encode(),session['csrf'].encode()): return respond('403 Forbidden',{'error':'Sessão inválida.'})
         if path=='/api/admin/students' and method=='GET':
             with self.connect() as db:
                 users=[dict(r) for r in db.execute("SELECT id,name,email,active,courses FROM users WHERE role='student' ORDER BY name")]
@@ -140,5 +142,6 @@ class Access:
             with self.connect() as db: user=db.execute("SELECT * FROM users WHERE id=? AND active=1 AND role='student'",(user_id,)).fetchone()
             if not user:return respond('404 Not Found',{'error':'Aluno não encontrado.'})
             raw=self.token('reset',user['email'],user_id=user_id)
+            with self.connect() as db: db.execute('INSERT INTO audit(actor,event,target,created) VALUES(?,?,?,?)',(session['user_id'],'reset_requested',str(user_id),int(time.time())))
             return respond('200 OK',{'link':self.origin+'/redefinir.html#'+raw})
         return respond('404 Not Found',{'error':'Recurso não encontrado.'})

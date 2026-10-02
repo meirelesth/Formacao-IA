@@ -12,6 +12,7 @@ class EnrollmentTests(unittest.TestCase):
         test_app.AuthenticationTests.setUp(self)
         self.app.add_user('Professor','teacher@example.com','teacher-pass-123456')
         with self.app.connect() as db: db.execute("UPDATE users SET role='admin' WHERE email='teacher@example.com'")
+        self.app.admin_totp_secret='JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'
         self.admin,self.csrf=self.login('teacher@example.com','teacher-pass-123456')
 
     def invite(self):
@@ -103,8 +104,9 @@ class EnrollmentTests(unittest.TestCase):
             token=self.invite()
             self.assertEqual(sender.call_args.args[0],'new@example.com')
             self.assertIn('#'+token,sender.call_args.args[1])
-            self.request('/api/forgot-password','POST',{'email':'a@example.com'})
-            self.assertEqual(sender.call_args.args[2],'reset')
+            with patch('server.access.recovery_async') as queue:
+                self.request('/api/forgot-password','POST',{'email':'a@example.com'})
+                queue.assert_called_once_with(self.app,'a@example.com')
 
     def test_backup_restore_keeps_accounts_and_progress(self):
         import sqlite3
@@ -114,3 +116,56 @@ class EnrollmentTests(unittest.TestCase):
         with restored.connect() as db:
             self.assertEqual(db.execute('SELECT COUNT(*) FROM users').fetchone()[0],3)
             self.assertEqual(db.execute('SELECT COUNT(*) FROM sessions').fetchone()[0],1)
+
+    def test_administrator_requires_second_factor_and_rejects_replay(self):
+        from server.security import totp
+        payload={'email':'teacher@example.com','password':'teacher-pass-123456'}
+        self.assertEqual(self.request('/api/login','POST',payload)['status'],401)
+        payload['otp']=totp(self.app.admin_totp_secret)
+        self.assertEqual(self.request('/api/login','POST',payload)['status'],401)
+        with self.app.connect() as db: db.execute('DELETE FROM otp_used')
+        self.assertEqual(self.request('/api/login','POST',payload)['status'],200)
+        self.assertEqual(self.request('/api/login','POST',payload)['status'],401)
+
+    def test_administrator_login_closed_without_configured_factor(self):
+        self.app.admin_totp_secret=''
+        self.assertEqual(self.request('/api/login','POST',{'email':'teacher@example.com','password':'teacher-pass-123456','otp':'123456'})['status'],401)
+
+    def test_idle_sessions_are_invalidated_server_side(self):
+        cookie,_=self.login()
+        with self.app.connect() as db: db.execute('UPDATE sessions SET last_seen=?',(int(time.time())-1801,))
+        self.assertEqual(self.request('/api/progress',cookie=cookie)['status'],401)
+        self.assertEqual(self.request('/api/admin/students',cookie=self.admin)['status'],401)
+
+    def test_student_cannot_change_own_role(self):
+        cookie,csrf=self.login()
+        self.assertEqual(self.request('/api/admin/student','PUT',{'id':1,'active':True,'courses':['basica'],'role':'admin','csrf':csrf},cookie)['status'],403)
+        with self.app.connect() as db: self.assertEqual(db.execute('SELECT role FROM users WHERE id=1').fetchone()[0],'student')
+
+    def test_recovery_schedules_unknown_and_known_accounts_identically(self):
+        with patch('server.access.recovery_async') as queue:
+            a=self.request('/api/forgot-password','POST',{'email':'a@example.com'})
+            b=self.request('/api/forgot-password','POST',{'email':'unknown@example.com'})
+            self.assertEqual(a['body'],b['body'])
+            self.assertEqual(queue.call_count,2)
+            self.assertEqual([c.args[1] for c in queue.call_args_list],['a@example.com','unknown@example.com'])
+
+    def test_malformed_unicode_csrf_and_null_paths_fail_closed(self):
+        cookie,_=self.login()
+        self.assertEqual(self.request('/api/logout','POST',{'csrf':'á'},cookie)['status'],403)
+        self.assertEqual(self.request('/api/admin/invite','POST',{'csrf':'á'},self.admin)['status'],403)
+        self.assertEqual(self.request('/assets/a\x00.png')['status'],400)
+
+    def test_xss_name_is_returned_as_json_not_executed_markup(self):
+        with self.app.connect() as db: db.execute("UPDATE users SET name=? WHERE id=1",('<img src=x onerror=alert(1)>',))
+        cookie,_=self.login()
+        r=self.request('/api/session',cookie=cookie)
+        self.assertTrue(r['headers']['Content-Type'].startswith('application/json'))
+        self.assertIn("script-src 'self'",r['headers']['Content-Security-Policy'])
+        self.assertEqual(r['headers']['Cache-Control'],'no-store')
+
+    def test_totp_rfc6238_vector(self):
+        import base64
+        from server.security import totp
+        secret=base64.b32encode(b'12345678901234567890').decode()
+        self.assertEqual(totp(secret,1),'287082')

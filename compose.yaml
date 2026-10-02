@@ -7,6 +7,7 @@ services:
     environment:
       APP_ORIGIN: "${APP_ORIGIN:?Defina a origem HTTPS da plataforma}"
       DATABASE_PATH: /data/formacao.sqlite3
+      ADMIN_TOTP_SECRET: "${ADMIN_TOTP_SECRET:?Configure o segundo fator do administrador}"
       SMTP_HOST: "${SMTP_HOST:-}"
       SMTP_PORT: "${SMTP_PORT:-587}"
       SMTP_USER: "${SMTP_USER:-}"
