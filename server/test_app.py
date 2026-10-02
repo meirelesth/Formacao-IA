@@ -52,19 +52,19 @@ class AuthenticationTests(unittest.TestCase):
 
     def test_progress_isolated_and_persistent(self):
         a,csrf=self.login()
-        r=self.request('/api/progress','PUT',{'lesson':'problema-real','completed':True,'csrf':csrf},a)
+        r=self.request('/api/progress','PUT',{'lesson':'ia-generativa','completed':True,'csrf':csrf},a)
         self.assertEqual(r['status'],200)
-        self.assertEqual(self.request('/api/progress',cookie=a)['body']['completed'],['problema-real'])
+        self.assertEqual(self.request('/api/progress',cookie=a)['body']['completed'],['ia-generativa'])
         b,_=self.login('b@example.com','senha-local-654321')
         self.assertEqual(self.request('/api/progress',cookie=b)['body']['completed'],[])
         self.app=Application(self.app.database,'https://formacao.example')
-        self.assertEqual(self.request('/api/progress',cookie=a)['body']['completed'],['problema-real'])
+        self.assertEqual(self.request('/api/progress',cookie=a)['body']['completed'],['ia-generativa'])
 
     def test_csrf_origin_and_unpublished_lesson(self):
         cookie,csrf=self.login()
-        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'problema-real','completed':True},cookie)['status'],403)
-        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'problema-real','completed':True,'csrf':csrf},cookie,origin='https://other.example')['status'],403)
-        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'apis','completed':True,'csrf':csrf},cookie)['status'],400)
+        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'ia-generativa','completed':True},cookie)['status'],403)
+        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'ia-generativa','completed':True,'csrf':csrf},cookie,origin='https://other.example')['status'],403)
+        self.assertEqual(self.request('/api/progress','PUT',{'lesson':'inexistente','completed':True,'csrf':csrf},cookie)['status'],400)
 
     def test_expired_session_and_logout(self):
         cookie,csrf=self.login()
@@ -76,8 +76,8 @@ class AuthenticationTests(unittest.TestCase):
 
     def test_static_paths_and_modes(self):
         self.assertEqual(self.request('/../server/app.py')['status'],404)
-        self.assertIn(b'data-preview="true"',self.request('/demo.html')['body'])
-        self.assertIn(b'data-preview="false"',self.request('/entrar.html')['body'])
+        self.assertEqual(self.request('/demo.html')['status'],404)
+        self.assertEqual(self.request('/entrar.html')['status'],200)
         cookie,_=self.login()
         self.assertIn(b'data-preview="false"',self.request('/aluno.html',cookie=cookie)['body'])
 
@@ -87,3 +87,4 @@ class AuthenticationTests(unittest.TestCase):
         self.assertEqual(self.request('/api/login','POST',{'email':'x','password':'x'},origin='')['status'],403)
 
 if __name__=='__main__': unittest.main()
+

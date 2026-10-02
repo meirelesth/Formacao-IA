@@ -1,0 +1,9 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+data
+**/__pycache__
+**/*.sqlite3
+**/*.sqlite3-*

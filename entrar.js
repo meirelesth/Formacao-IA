@@ -1,7 +1,8 @@
 'use strict';
-const preview=document.documentElement.dataset.preview==='true';
-document.getElementById(preview?'login-preview':'login-form').hidden=false;
-document.getElementById('login-form').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,button=form.querySelector('button'),error=document.getElementById('login-error');button.disabled=true;error.textContent='';
-  try{const fields=new FormData(form);const response=await fetch('api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:fields.get('email'),password:fields.get('password')})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Não foi possível entrar.');location.assign('aluno.html');}catch(err){error.textContent=err.message;}finally{button.disabled=false;}
-});
+const login=document.getElementById('login-form'),recovery=document.getElementById('forgot-form');
+async function request(path,data){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});let j;try{j=await r.json();}catch{throw new Error('O acesso dos alunos está aguardando ativação. Fale com Luís Fernando.');}if(!r.ok)throw new Error(j.error||'Não foi possível continuar.');return j;}
+document.getElementById('show-password').onclick=e=>{const p=document.getElementById('password'),show=p.type==='password';p.type=show?'text':'password';e.target.textContent=show?'Ocultar':'Mostrar';e.target.setAttribute('aria-pressed',show);e.target.setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha');};
+document.getElementById('forgot').onclick=()=>{login.hidden=true;recovery.hidden=false;document.getElementById('recovery-email').value=document.getElementById('email').value;document.getElementById('recovery-email').focus();};
+document.getElementById('back-login').onclick=()=>{login.hidden=false;recovery.hidden=true;};
+login.onsubmit=async e=>{e.preventDefault();const b=login.querySelector('[type=submit]'),error=document.getElementById('login-error');b.disabled=true;error.textContent='';try{const f=new FormData(login),j=await request('api/login',{email:f.get('email'),password:f.get('password')});location.assign(j.user.role==='admin'?'admin.html':'aluno.html');}catch(err){error.textContent=err.message;}finally{b.disabled=false;}};
+recovery.onsubmit=async e=>{e.preventDefault();const b=recovery.querySelector('[type=submit]'),m=document.getElementById('recovery-message');b.disabled=true;m.textContent='';try{m.textContent=(await request('api/forgot-password',{email:new FormData(recovery).get('email')})).message;}catch(err){m.textContent=err.message;}finally{b.disabled=false;}};

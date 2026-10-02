@@ -7,11 +7,21 @@ services:
     environment:
       APP_ORIGIN: "${APP_ORIGIN:?Defina a origem HTTPS da plataforma}"
       DATABASE_PATH: /data/formacao.sqlite3
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
     volumes:
       - formacao-data:/data
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 volumes:
   formacao-data:
