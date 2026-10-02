@@ -30,5 +30,37 @@ const fs = require('node:fs');
   }
   assert.deepEqual(errors,[],`Browser errors at ${width}`);await context.close();
  }
+ // Skills UI: deterministic fixtures; server authorization is verified by integration tests.
+ for(const width of [390,1440]){
+  const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage();
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  let items=[{id:1,title:'Painel de indicadores',category:'Dados',description:'Analise dados com critérios claros.',version:'1.0',platform:'claude',download_url:'https://example.com/skill.zip',source_url:'https://example.com/docs',install_command:'',published:true,updated:1770000000}];
+  let role='student';
+  await page.route('**/api/session',r=>r.fulfill({json:{authenticated:true,csrf:'fixture',user:{name:'Aluno de teste',role}}}));
+  await page.route('**/api/progress',r=>r.fulfill({json:{completed:[]}}));
+  await page.route('**/catalogo.json?*',r=>r.fulfill({json:JSON.parse(fs.readFileSync('catalogo.json','utf8'))}));
+  await page.route('**/api/skills',r=>r.fulfill({json:{skills:items.filter(s=>s.published)}}));
+  await page.route('**/api/admin/students',r=>r.fulfill({json:{students:[],invitations:[]}}));
+  await page.route('**/api/admin/skills',r=>{if(r.request().method()==='GET')return r.fulfill({json:{skills:items}});const data=r.request().postDataJSON();if(data.id)items=items.map(s=>s.id===data.id?{...s,...data}:s);else items.push({...data,id:2,updated:1770000000});return r.fulfill({json:{ok:true,id:data.id||2}});});
+  await page.route('**/aluno.html',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('aluno.html','utf8')}));
+  await page.goto('http://127.0.0.1:8080/aluno.html#skills');
+  await page.locator('#skill-search').waitFor();assert.equal(await page.locator('.skill-card').count(),1);
+  await page.locator('#skill-search').fill('inexistente');assert.equal(await page.locator('.skill-card').count(),0);
+  await page.locator('#skill-search').fill('indicadores');assert.equal(await page.locator('.skill-card').count(),1);
+  assert.equal(await page.getByRole('link',{name:'Baixar ZIP para Claude'}).getAttribute('href'),'https://example.com/skill.zip');
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await page.screenshot({path:`browser-results/skills-student-${width}.png`,fullPage:true});
+  role='admin';await page.route('**/admin.html',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('admin.html','utf8')}));
+  await page.goto('http://127.0.0.1:8080/admin.html');await page.locator('[data-skill-edit]').waitFor();
+  await page.locator('[data-skill-edit]').click();assert.equal(await page.locator('[name=title]').inputValue(),'Painel de indicadores');
+  await page.locator('[name=title]').fill('Painel atualizado');await page.locator('#skill-form [type=submit]').click();
+  await page.getByText('Skill salva. As publicadas já ficam disponíveis aos alunos.').waitFor();
+  assert(items.some(s=>s.title==='Painel atualizado'));
+  await page.locator('[data-skill-toggle]').click();await page.getByText('Skill retirada da biblioteca.',{exact:true}).waitFor();assert(!items[0].published);
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await page.screenshot({path:`browser-results/skills-admin-${width}.png`,fullPage:true});
+  assert.deepEqual(errors,[]);checks+=10;await context.close();
+ }
  await browser.close();console.log(`${checks} browser checks passed across ${widths.join(', ')}px`);
 })().catch(e=>{console.error(e);process.exit(1)});
+

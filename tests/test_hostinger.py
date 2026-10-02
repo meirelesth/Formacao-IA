@@ -144,4 +144,24 @@ class HostingerTests(unittest.TestCase):
     def test_25_full_recovery_queue_has_generic_response_and_stays_bounded(self):
         fixture('fill-queue');a=call('/api/forgot-password','POST',{'email':'a@example.com'});b=call('/api/forgot-password','POST',{'email':'unknown@example.com'})
         self.assertEqual(a[0],200);self.assertEqual(a[2],b[2]);self.assertEqual(len(json.loads(fixture('inspect'))['jobs']),1000)
+    def test_skills_publication_and_access(self):
+        self.assertEqual(call('/api/skills')[0],401)
+        a,t=self.login()
+        self.assertEqual(call('/api/admin/skills',cookie=a)[0],403)
+        c,csrf=self.admin()
+        payload=dict(title='Skill de teste',category='Dados',description='Pacote de teste',version='1.0',platform='claude',download_url='https://example.com/skill.zip',source_url='https://example.com/docs',install_command='',published=False,csrf=csrf)
+        self.assertEqual(call('/api/admin/skills','POST',{**payload,'csrf':'wrong'},c)[0],403)
+        status,_,data=call('/api/admin/skills','POST',payload,c)
+        self.assertEqual(status,201)
+        id=data['id']
+        self.assertNotIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
+        update={**payload,'id':id,'published':True}
+        self.assertEqual(call('/api/admin/skills','PUT',update,c)[0],200)
+        self.assertIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
+        self.assertEqual(call('/api/admin/skills','PUT',{**update,'download_url':'javascript:alert(1)'},c)[0],400)
+        self.assertEqual(call('/api/admin/skills','PUT',{**update,'download_url':''},c)[0],400)
+        self.assertEqual(call('/api/admin/skills','PUT',{**update,'published':False},c)[0],200)
+        self.assertNotIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
+
 if __name__=='__main__':unittest.main(verbosity=2)
+

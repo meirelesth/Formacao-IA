@@ -49,6 +49,7 @@ class Application(Access):
                 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL, csrf TEXT NOT NULL, expires INTEGER NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id));
                 CREATE TABLE IF NOT EXISTS progress(user_id INTEGER NOT NULL, lesson_id TEXT NOT NULL, completed INTEGER NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY(user_id,lesson_id), FOREIGN KEY(user_id) REFERENCES users(id));
+                CREATE TABLE IF NOT EXISTS skills(id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, version TEXT NOT NULL, platform TEXT NOT NULL, download_url TEXT NOT NULL, source_url TEXT NOT NULL, install_command TEXT NOT NULL, published INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL);
                 CREATE TABLE IF NOT EXISTS attempts(key TEXT NOT NULL, created INTEGER NOT NULL);
                 CREATE INDEX IF NOT EXISTS attempts_key ON attempts(key,created);
             ''')
@@ -95,6 +96,42 @@ class Application(Access):
                 db.execute('UPDATE sessions SET last_seen=? WHERE token_hash=?',(now,token_hash))
             return row
 
+    def skills_route(self,path,method,data,session,respond):
+        if path not in ('/api/skills','/api/admin/skills'): return None
+        if not session: return respond('401 Unauthorized',{'error':'Entre para acessar as skills.'})
+        admin=path=='/api/admin/skills'
+        if admin and session['role']!='admin': return respond('403 Forbidden',{'error':'Acesso exclusivo da administração.'})
+        if method!='GET' and not hmac.compare_digest(str(data.get('csrf','')).encode(),session['csrf'].encode()): return respond('403 Forbidden',{'error':'Sessão inválida.'})
+        if method=='GET':
+            with self.connect() as db:
+                rows=db.execute('SELECT * FROM skills'+('' if admin else ' WHERE published=1')+' ORDER BY title,id').fetchall()
+            return respond('200 OK',{'skills':[{**dict(r),'published':bool(r['published'])} for r in rows]})
+        if not admin or method not in ('POST','PUT'): return respond('405 Method Not Allowed',{'error':'Método não permitido.'})
+        values={}
+        for field,limit in dict(title=120,category=60,description=500,version=24,platform=24,download_url=1000,source_url=1000,install_command=800).items():
+            value=data.get(field,'')
+            if not isinstance(value,str) or len(value.encode())>limit or any(ord(c)<32 and c not in '\t\n\r' for c in value): return respond('400 Bad Request',{'error':'Campo inválido: '+field})
+            values[field]=value.strip()
+        if any(not values[f] for f in ('title','category','description','version')) or values['platform'] not in ('claude','claude-code','codex') or not isinstance(data.get('published'),bool): return respond('400 Bad Request',{'error':'Preencha os campos obrigatórios.'})
+        for f in ('download_url','source_url'):
+            u=values[f]
+            if u:
+                try:
+                    p=urlsplit(u)
+                    if p.scheme!='https' or not p.hostname or p.username or p.password or any(c.isspace() for c in u): raise ValueError()
+                except ValueError: return respond('400 Bad Request',{'error':'Use um link HTTPS sem credenciais.'})
+        if data['published'] and (values['platform']=='claude' and not values['download_url'] or values['platform']!='claude' and not values['download_url'] and not values['install_command']): return respond('400 Bad Request',{'error':'Informe o pacote ZIP ou comando de instalação compatível.'})
+        params=list(values.values())+[int(data['published']),int(time.time())]
+        with self.connect() as db:
+            if method=='POST':
+                id=db.execute('INSERT INTO skills(title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?)',params).lastrowid
+            else:
+                id=data.get('id')
+                if type(id) is not int or id<1: return respond('400 Bad Request',{'error':'Skill inválida.'})
+                if not db.execute('SELECT id FROM skills WHERE id=?',(id,)).fetchone(): return respond('404 Not Found',{'error':'Skill não encontrada.'})
+                db.execute('UPDATE skills SET title=?,category=?,description=?,version=?,platform=?,download_url=?,source_url=?,install_command=?,published=?,updated=? WHERE id=?',params+[id])
+        return respond('201 Created' if method=='POST' else '200 OK',{'ok':True,'id':id})
+
     def __call__(self, environ, start_response):
         method = environ.get('REQUEST_METHOD','GET')
         path = posixpath.normpath('/'+unquote(environ.get('PATH_INFO','/')).lstrip('/'))
@@ -126,6 +163,8 @@ class Application(Access):
         else:
             data={}
         session=self.session(environ)
+        skills=self.skills_route(path,method,data,session,respond)
+        if skills is not None: return skills
         access=self.access_route(path,method,data,session,environ,respond)
         if access is not None: return access
         if path == '/api/session' and method == 'GET':
@@ -230,4 +269,5 @@ def main():
         with make_server('127.0.0.1',args.port,app) as httpd: httpd.serve_forever()
 
 if __name__=='__main__': main()
+
 

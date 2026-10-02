@@ -37,3 +37,11 @@ CREATE TABLE IF NOT EXISTS mail_jobs (
  attempts INT NOT NULL DEFAULT 0, available BIGINT NOT NULL, created BIGINT NOT NULL,
  INDEX mail_due(available), INDEX mail_created(created)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE IF NOT EXISTS skills (
+ id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, title VARCHAR(120) NOT NULL,
+ category VARCHAR(60) NOT NULL, description TEXT NOT NULL, version VARCHAR(24) NOT NULL,
+ platform VARCHAR(24) NOT NULL, download_url TEXT NOT NULL, source_url TEXT NOT NULL,
+ install_command TEXT NOT NULL, published TINYINT NOT NULL DEFAULT 0, updated BIGINT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

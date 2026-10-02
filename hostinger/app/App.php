@@ -175,6 +175,7 @@ final class FormacaoApp {
             if(!$session)$this->fail(401,'Entre para acessar sua formação.');
             if($method!=='GET')$this->csrf($data,$session);
             if(str_starts_with($path,'/api/admin/')){if($session['role']!=='admin')$this->fail(403,'Acesso exclusivo da administração.');$this->admin($path,$method,$data,$session);}
+            if($path==='/api/skills')$this->skillRoute($method,$data,false);
             if($path==='/api/logout'&&$method==='POST'){$this->query('DELETE FROM sessions WHERE token_hash=?',[$session['token_hash']]);$this->cookie('',-3600);$this->json(200,['ok'=>true]);}
             if($path==='/api/progress'&&$method==='GET'){
                 $rows=$this->query('SELECT lesson_id FROM progress WHERE user_id=? AND completed=1',[$session['user_id']])->fetchAll();$this->json(200,['completed'=>array_column($rows,'lesson_id')]);
@@ -202,7 +203,28 @@ final class FormacaoApp {
         $ext=strtolower(pathinfo($target,PATHINFO_EXTENSION));$types=['html'=>'text/html','css'=>'text/css','js'=>'text/javascript','png'=>'image/png','svg'=>'image/svg+xml','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','ico'=>'image/x-icon','pdf'=>'application/pdf','md'=>'text/plain'];
         header('Content-Type: '.($types[$ext]??'application/octet-stream').(in_array($ext,['html','css','js','md'],true)?'; charset=utf-8':''));header('Content-Length: '.filesize($target));readfile($target);exit;
     }
+    private function skillRoute(string $method,array $data,bool $admin): never {
+        $this->db->exec("CREATE TABLE IF NOT EXISTS skills (  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, title VARCHAR(120) NOT NULL,  category VARCHAR(60) NOT NULL, description TEXT NOT NULL, version VARCHAR(24) NOT NULL,  platform VARCHAR(24) NOT NULL, download_url TEXT NOT NULL, source_url TEXT NOT NULL,  install_command TEXT NOT NULL, published TINYINT NOT NULL DEFAULT 0, updated BIGINT NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        if($method==='GET'){
+            $rows=$this->query('SELECT * FROM skills'.($admin?'':' WHERE published=1').' ORDER BY title,id')->fetchAll();
+            foreach($rows as &$row){$row['id']=(int)$row['id'];$row['published']=(bool)$row['published'];$row['updated']=(int)$row['updated'];}unset($row);
+            $this->json(200,['skills'=>$rows]);
+        }
+        if(!$admin||!in_array($method,['POST','PUT'],true))$this->fail(405,'Método não permitido.');
+        $values=[];
+        foreach(['title'=>120,'category'=>60,'description'=>500,'version'=>24,'platform'=>24,'download_url'=>1000,'source_url'=>1000,'install_command'=>800] as $field=>$limit){
+            $value=$data[$field]??'';if(!is_string($value)||strlen($value)>$limit||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))$this->fail(400,'Campo inválido: '.$field);$values[$field]=trim($value);
+        }
+        if(!$values['title']||!$values['category']||!$values['description']||!$values['version']||!in_array($values['platform'],['claude','claude-code','codex'],true)||!is_bool($data['published']??null))$this->fail(400,'Preencha os campos obrigatórios.');
+        foreach(['download_url','source_url'] as $field){$u=$values[$field];if($u!==''&&(!filter_var($u,FILTER_VALIDATE_URL)||parse_url($u,PHP_URL_SCHEME)!=='https'||parse_url($u,PHP_URL_USER)!==null||parse_url($u,PHP_URL_PASS)!==null))$this->fail(400,'Use um link HTTPS sem credenciais.');}
+        if($data['published']&&($values['platform']==='claude'&&!$values['download_url']||$values['platform']!=='claude'&&!$values['download_url']&&!$values['install_command']))$this->fail(400,'Para publicar, informe o pacote ZIP ou o comando de instalação compatível.');
+        $params=array_values($values);$params[]=(int)$data['published'];$params[]=time();
+        if($method==='POST'){$this->query('INSERT INTO skills(title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?)',$params);$id=(int)$this->db->lastInsertId();}
+        else{$id=$data['id']??null;if(!is_int($id)||$id<1)$this->fail(400,'Skill inválida.');if(!$this->query('SELECT id FROM skills WHERE id=?',[$id])->fetch())$this->fail(404,'Skill não encontrada.');$params[]=$id;$this->query('UPDATE skills SET title=?,category=?,description=?,version=?,platform=?,download_url=?,source_url=?,install_command=?,published=?,updated=? WHERE id=?',$params);}
+        $this->json($method==='POST'?201:200,['ok'=>true,'id'=>$id]);
+    }
     private function admin(string $path,string $method,array $data,array $session): never {
+        if($path==='/api/admin/skills')$this->skillRoute($method,$data,true);
         if($path==='/api/admin/students'&&$method==='GET'){
             $users=$this->query("SELECT id,name,email,active,courses FROM users WHERE role='student' ORDER BY name")->fetchAll();
             foreach($users as &$u){$u['id']=(int)$u['id'];$u['active']=(int)$u['active'];}unset($u);
@@ -230,3 +252,4 @@ final class FormacaoApp {
         $this->fail(404,'Recurso não encontrado.');
     }
 }
+
