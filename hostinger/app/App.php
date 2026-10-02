@@ -122,7 +122,7 @@ final class FormacaoApp {
             if($this->limited('login-ip:'.$ip,20)||$this->limited('login-email:'.$email,5))$this->fail(429,'Muitas tentativas. Aguarde 15 minutos.');
             $user=$this->query('SELECT * FROM users WHERE email=?',[$email])->fetch();
             // A fixed non-user hash uses the same configured KDF path as real accounts.
-            $dummy=$this->config['dummy_hash']??null;if(!$dummy)throw new RuntimeException('Run install first');
+            $dummy=$this->config['dummy_hash']??null;if(!$dummy)throw new RuntimeException('Run install first',1001);
             $valid=self::passwordMatches($password,$user['password']??$dummy);
             if(!$user||!$valid||!(int)$user['active'])$this->fail(401,'E-mail ou senha inválidos.');
             $this->db->beginTransaction();$locked=$this->query('SELECT * FROM users WHERE id=? FOR UPDATE',[$user['id']])->fetch();

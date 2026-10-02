@@ -20,7 +20,7 @@ try {
     $app->handle();
 } catch (Throwable $e) {
     // Não expor SQL, credenciais, nomes ou tokens ao navegador/log.
-    error_log('Formacao: internal request failure');
+    error_log('Formacao: internal request failure ('.get_class($e).':'.(int)$e->getCode().')');
     http_response_code(503);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error'=>'Serviço temporariamente indisponível. Fale com o professor.']);

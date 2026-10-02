@@ -50,6 +50,9 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break || sleep 1; done
       - name: Validate installation, authentication and student privacy
         run: python tests/test_hostinger.py
+      - name: Collect safe server failure diagnostics
+        if: failure()
+        run: docker logs lf-hostinger 2>&1 | rg "Formacao:" || true
       - name: Install browser
         run: |
           npm install --no-save --package-lock=false playwright@1.56.1

@@ -5,6 +5,7 @@ final class FormacaoSetup {
         $temp=$path.'.tmp.'.bin2hex(random_bytes(6));
         if(file_put_contents($temp,"<?php\nreturn ".var_export($value,true).";\n",LOCK_EX)===false)throw new RuntimeException('Cannot save settings');
         chmod($temp,0600);if(!rename($temp,$path))throw new RuntimeException('Cannot save settings');
+        clearstatcache(true,$path);if(function_exists('opcache_invalidate'))opcache_invalidate($path,true);
     }
     public static function run(array $config,string $public,string $private): never {
         header('Cache-Control: no-store');header('Referrer-Policy: no-referrer');header('X-Frame-Options: DENY');header("Content-Security-Policy: default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
