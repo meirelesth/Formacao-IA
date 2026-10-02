@@ -17,16 +17,37 @@ class SkillsTests(unittest.TestCase):
         created=self.request('/api/admin/skills','POST',payload,student)
         self.assertEqual(created['status'],201)
         id=created['body']['id']
-        self.assertEqual(self.request('/api/skills',cookie=student)['body']['skills'],[])
-        self.assertEqual(len(self.request('/api/admin/skills',cookie=student)['body']['skills']),1)
+        self.assertFalse(any(s['title']=='Skill de teste' for s in self.request('/api/skills',cookie=student)['body']['skills']))
+        self.assertEqual(sum(s['title']=='Skill de teste' for s in self.request('/api/admin/skills',cookie=student)['body']['skills']),1)
         update={**payload,'id':id,'published':True}
         self.assertEqual(self.request('/api/admin/skills','PUT',update,student)['status'],200)
         other,_=self.login('b@example.com','senha-local-654321')
-        self.assertEqual(self.request('/api/skills',cookie=other)['body']['skills'][0]['id'],id)
+        self.assertEqual(next(s for s in self.request('/api/skills',cookie=other)['body']['skills'] if s['title']=='Skill de teste')['id'],id)
         self.assertEqual(self.request('/api/skills','PUT',update,other)['status'],403)
         self.assertEqual(self.request('/api/admin/skills','PUT',{**update,'download_url':'javascript:alert(1)'},student)['status'],400)
         self.assertEqual(self.request('/api/admin/skills','PUT',{**update,'download_url':'https://user:secret@example.com/file.zip'},student)['status'],400)
         self.assertEqual(self.request('/api/admin/skills','PUT',{**update,'download_url':''},student)['status'],400)
         self.assertEqual(self.request('/api/admin/skills','PUT',{**update,'published':False},student)['status'],200)
-        self.assertEqual(self.request('/api/skills',cookie=other)['body']['skills'],[])
+        self.assertFalse(any(s['title']=='Skill de teste' for s in self.request('/api/skills',cookie=other)['body']['skills']))
         self.assertEqual(self.request('/api/admin/skills','PUT',{**update,'id':9999},student)['status'],404)
+
+    def test_import_download_and_unpublish_persist(self):
+        import io, zipfile
+        student,token=self.login()
+        skills=self.request('/api/skills',cookie=student)['body']['skills']
+        self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
+        packages=[s for s in skills if s['download_url'].startswith('/api/skills/')]
+        self.assertEqual(len(packages),141)
+        target=next(s for s in packages if s['title']=='docx')
+        url=target['download_url']
+        self.assertEqual(self.request(url)['status'],401)
+        download=self.request(url,cookie=student)
+        self.assertEqual(download['status'],200)
+        archive=zipfile.ZipFile(io.BytesIO(download['body']))
+        self.assertIn('docx/SKILL.md',archive.namelist())
+        self.assertEqual(self.request('/api/skills/bundle/download',cookie=student)['status'],403)
+        with self.app.connect() as db: db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
+        self.assertEqual(self.request('/api/admin/skills','PUT',{**target,'csrf':token,'published':False},student)['status'],200)
+        self.assertEqual(self.request(url,cookie=student)['status'],404)
+        self.assertFalse(any(s['id']==target['id'] for s in self.request('/api/skills',cookie=student)['body']['skills']))
+        self.assertEqual(self.request('/api/skills/bundle/download',cookie=student)['status'],200)

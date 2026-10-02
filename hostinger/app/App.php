@@ -176,6 +176,7 @@ final class FormacaoApp {
             if($method!=='GET')$this->csrf($data,$session);
             if(str_starts_with($path,'/api/admin/')){if($session['role']!=='admin')$this->fail(403,'Acesso exclusivo da administração.');$this->admin($path,$method,$data,$session);}
             if($path==='/api/skills')$this->skillRoute($method,$data,false);
+            if(preg_match('~^/api/skills/(bundle|[0-9]+)/download$~D',$path,$match))$this->skillDownload($method,$match[1],$session);
             if($path==='/api/logout'&&$method==='POST'){$this->query('DELETE FROM sessions WHERE token_hash=?',[$session['token_hash']]);$this->cookie('',-3600);$this->json(200,['ok'=>true]);}
             if($path==='/api/progress'&&$method==='GET'){
                 $rows=$this->query('SELECT lesson_id FROM progress WHERE user_id=? AND completed=1',[$session['user_id']])->fetchAll();$this->json(200,['completed'=>array_column($rows,'lesson_id')]);
@@ -203,8 +204,31 @@ final class FormacaoApp {
         $ext=strtolower(pathinfo($target,PATHINFO_EXTENSION));$types=['html'=>'text/html','css'=>'text/css','js'=>'text/javascript','png'=>'image/png','svg'=>'image/svg+xml','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','ico'=>'image/x-icon','pdf'=>'application/pdf','md'=>'text/plain'];
         header('Content-Type: '.($types[$ext]??'application/octet-stream').(in_array($ext,['html','css','js','md'],true)?'; charset=utf-8':''));header('Content-Length: '.filesize($target));readfile($target);exit;
     }
+    private function importSkills(): void {
+        $file=$this->private.'/skills-catalog.json';if(!is_file($file))return;
+        $source=json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR);
+        $this->db->exec("CREATE TABLE IF NOT EXISTS skills_imports(version VARCHAR(80) PRIMARY KEY) ENGINE=InnoDB");
+        if($this->query('SELECT version FROM skills_imports WHERE version=?',[$source['import_version']])->fetch())return;
+        $this->db->beginTransaction();
+        try{
+            foreach($source['skills'] as $row)$this->query('INSERT IGNORE INTO skills(id,title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',array_values($row));
+            $this->query('INSERT IGNORE INTO skills_imports(version) VALUES(?)',[$source['import_version']]);$this->db->commit();
+        }catch(Throwable $e){$this->db->rollBack();throw $e;}
+    }
+    private function skillDownload(string $method,string $key,array $session): never {
+        $this->db->exec("CREATE TABLE IF NOT EXISTS skills (  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, title VARCHAR(120) NOT NULL,  category VARCHAR(60) NOT NULL, description TEXT NOT NULL, version VARCHAR(24) NOT NULL,  platform VARCHAR(24) NOT NULL, download_url TEXT NOT NULL, source_url TEXT NOT NULL,  install_command TEXT NOT NULL, published TINYINT NOT NULL DEFAULT 0, updated BIGINT NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        $this->importSkills();
+        if($method!=='GET')$this->fail(405,'Método não permitido.');
+        if($key==='bundle'&&$session['role']!=='admin')$this->fail(403,'Pacote completo exclusivo da administração.');
+        if($key!=='bundle'&&!$this->query('SELECT id FROM skills WHERE id=? AND published=1',[(int)$key])->fetch())$this->fail(404,'Pacote indisponível.');
+        $file=$this->private.'/skills-packages.json';$packages=is_file($file)?json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR):[];
+        $package=$packages[$key]??null;if(!$package)$this->fail(404,'Pacote indisponível.');
+        $bytes=base64_decode($package['base64'],true);if($bytes===false)$this->fail(500,'Pacote inválido.');
+        header('Content-Type: application/zip');header('Content-Disposition: attachment; filename="'.$package['name'].'"');header('Content-Length: '.strlen($bytes));echo $bytes;exit;
+    }
     private function skillRoute(string $method,array $data,bool $admin): never {
         $this->db->exec("CREATE TABLE IF NOT EXISTS skills (  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, title VARCHAR(120) NOT NULL,  category VARCHAR(60) NOT NULL, description TEXT NOT NULL, version VARCHAR(24) NOT NULL,  platform VARCHAR(24) NOT NULL, download_url TEXT NOT NULL, source_url TEXT NOT NULL,  install_command TEXT NOT NULL, published TINYINT NOT NULL DEFAULT 0, updated BIGINT NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        $this->importSkills();
         if($method==='GET'){
             $rows=$this->query('SELECT * FROM skills'.($admin?'':' WHERE published=1').' ORDER BY title,id')->fetchAll();
             foreach($rows as &$row){$row['id']=(int)$row['id'];$row['published']=(bool)$row['published'];$row['updated']=(int)$row['updated'];}unset($row);
@@ -215,9 +239,9 @@ final class FormacaoApp {
         foreach(['title'=>120,'category'=>60,'description'=>500,'version'=>24,'platform'=>24,'download_url'=>1000,'source_url'=>1000,'install_command'=>800] as $field=>$limit){
             $value=$data[$field]??'';if(!is_string($value)||strlen($value)>$limit||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))$this->fail(400,'Campo inválido: '.$field);$values[$field]=trim($value);
         }
-        if(!$values['title']||!$values['category']||!$values['description']||!$values['version']||!in_array($values['platform'],['claude','claude-code','codex'],true)||!is_bool($data['published']??null))$this->fail(400,'Preencha os campos obrigatórios.');
-        foreach(['download_url','source_url'] as $field){$u=$values[$field];if($u!==''&&(!filter_var($u,FILTER_VALIDATE_URL)||parse_url($u,PHP_URL_SCHEME)!=='https'||parse_url($u,PHP_URL_USER)!==null||parse_url($u,PHP_URL_PASS)!==null))$this->fail(400,'Use um link HTTPS sem credenciais.');}
-        if($data['published']&&($values['platform']==='claude'&&!$values['download_url']||$values['platform']!=='claude'&&!$values['download_url']&&!$values['install_command']))$this->fail(400,'Para publicar, informe o pacote ZIP ou o comando de instalação compatível.');
+        if(!$values['title']||!$values['category']||!$values['description']||!$values['version']||!in_array($values['platform'],['claude','claude-code','codex','catalog'],true)||!is_bool($data['published']??null))$this->fail(400,'Preencha os campos obrigatórios.');
+        foreach(['download_url','source_url'] as $field){$u=$values[$field];if($field==='download_url'&&preg_match('~^/api/skills/[0-9]+/download$~D',$u))continue;if($u!==''&&(!filter_var($u,FILTER_VALIDATE_URL)||parse_url($u,PHP_URL_SCHEME)!=='https'||parse_url($u,PHP_URL_USER)!==null||parse_url($u,PHP_URL_PASS)!==null))$this->fail(400,'Use um link HTTPS sem credenciais.');}
+        if($data['published']&&($values['platform']==='claude'&&!$values['download_url']||!in_array($values['platform'],['claude','catalog'],true)&&!$values['download_url']&&!$values['install_command']||$values['platform']==='catalog'&&!$values['source_url']))$this->fail(400,'Para publicar, informe o pacote ZIP ou o comando de instalação compatível.');
         $params=array_values($values);$params[]=(int)$data['published'];$params[]=time();
         if($method==='POST'){$this->query('INSERT INTO skills(title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?)',$params);$id=(int)$this->db->lastInsertId();}
         else{$id=$data['id']??null;if(!is_int($id)||$id<1)$this->fail(400,'Skill inválida.');if(!$this->query('SELECT id FROM skills WHERE id=?',[$id])->fetch())$this->fail(404,'Skill não encontrada.');$params[]=$id;$this->query('UPDATE skills SET title=?,category=?,description=?,version=?,platform=?,download_url=?,source_url=?,install_command=?,published=?,updated=? WHERE id=?',$params);}

@@ -1,4 +1,6 @@
 """Aplicação WSGI de autenticação e progresso. Executar atrás de HTTPS em produção."""
+import base64
+import re
 import argparse
 import getpass
 import hashlib
@@ -96,12 +98,35 @@ class Application(Access):
                 db.execute('UPDATE sessions SET last_seen=? WHERE token_hash=?',(now,token_hash))
             return row
 
+    def import_skills(self):
+        catalog=self.site/'server/skills-catalog.json'
+        if not catalog.exists(): return
+        source=json.loads(catalog.read_text())
+        with self.connect() as db:
+            db.execute('CREATE TABLE IF NOT EXISTS skills_imports(version TEXT PRIMARY KEY)')
+            if db.execute('SELECT 1 FROM skills_imports WHERE version=?',(source['import_version'],)).fetchone(): return
+            fields=('id','title','category','description','version','platform','download_url','source_url','install_command','published','updated')
+            db.executemany('INSERT OR IGNORE INTO skills('+','.join(fields)+') VALUES('+','.join('?' for f in fields)+')',[[s[f] for f in fields] for s in source['skills']])
+            db.execute('INSERT OR IGNORE INTO skills_imports(version) VALUES(?)',(source['import_version'],))
+
     def skills_route(self,path,method,data,session,respond):
-        if path not in ('/api/skills','/api/admin/skills'): return None
+        download=re.fullmatch(r'/api/skills/(bundle|[0-9]+)/download',path)
+        if path not in ('/api/skills','/api/admin/skills') and not download: return None
         if not session: return respond('401 Unauthorized',{'error':'Entre para acessar as skills.'})
         admin=path=='/api/admin/skills'
         if admin and session['role']!='admin': return respond('403 Forbidden',{'error':'Acesso exclusivo da administração.'})
         if method!='GET' and not hmac.compare_digest(str(data.get('csrf','')).encode(),session['csrf'].encode()): return respond('403 Forbidden',{'error':'Sessão inválida.'})
+        self.import_skills()
+        if download:
+            if method!='GET': return respond('405 Method Not Allowed',{'error':'Método não permitido.'})
+            key=download.group(1)
+            with self.connect() as db:
+                if key!='bundle' and not db.execute('SELECT id FROM skills WHERE id=? AND published=1',(int(key),)).fetchone(): return respond('404 Not Found',{'error':'Pacote indisponível.'})
+                if key=='bundle' and session['role']!='admin': return respond('403 Forbidden',{'error':'Pacote completo exclusivo da administração. Use os downloads individuais.'})
+            package_file=self.site/'server/skills-packages.json'
+            package=json.loads(package_file.read_text()).get(key) if package_file.exists() else None
+            if not package: return respond('404 Not Found',{'error':'Pacote indisponível.'})
+            return respond('200 OK',base64.b64decode(package['base64'],validate=True),[('Content-Disposition','attachment; filename="'+package['name']+'"')],content_type='application/zip')
         if method=='GET':
             with self.connect() as db:
                 rows=db.execute('SELECT * FROM skills'+('' if admin else ' WHERE published=1')+' ORDER BY title,id').fetchall()
@@ -112,15 +137,16 @@ class Application(Access):
             value=data.get(field,'')
             if not isinstance(value,str) or len(value.encode())>limit or any(ord(c)<32 and c not in '\t\n\r' for c in value): return respond('400 Bad Request',{'error':'Campo inválido: '+field})
             values[field]=value.strip()
-        if any(not values[f] for f in ('title','category','description','version')) or values['platform'] not in ('claude','claude-code','codex') or not isinstance(data.get('published'),bool): return respond('400 Bad Request',{'error':'Preencha os campos obrigatórios.'})
+        if any(not values[f] for f in ('title','category','description','version')) or values['platform'] not in ('claude','claude-code','codex','catalog') or not isinstance(data.get('published'),bool): return respond('400 Bad Request',{'error':'Preencha os campos obrigatórios.'})
         for f in ('download_url','source_url'):
             u=values[f]
+            if f=='download_url' and re.fullmatch(r'/api/skills/[0-9]+/download',u): continue
             if u:
                 try:
                     p=urlsplit(u)
                     if p.scheme!='https' or not p.hostname or p.username or p.password or any(c.isspace() for c in u): raise ValueError()
                 except ValueError: return respond('400 Bad Request',{'error':'Use um link HTTPS sem credenciais.'})
-        if data['published'] and (values['platform']=='claude' and not values['download_url'] or values['platform']!='claude' and not values['download_url'] and not values['install_command']): return respond('400 Bad Request',{'error':'Informe o pacote ZIP ou comando de instalação compatível.'})
+        if data['published'] and (values['platform']=='claude' and not values['download_url'] or values['platform'] not in ('claude','catalog') and not values['download_url'] and not values['install_command'] or values['platform']=='catalog' and not values['source_url']): return respond('400 Bad Request',{'error':'Informe o pacote ZIP ou comando de instalação compatível.'})
         params=list(values.values())+[int(data['published']),int(time.time())]
         with self.connect() as db:
             if method=='POST':

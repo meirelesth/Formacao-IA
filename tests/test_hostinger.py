@@ -163,5 +163,22 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call('/api/admin/skills','PUT',{**update,'published':False},c)[0],200)
         self.assertNotIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
 
+    def test_central_import_and_packages(self):
+        a,t=self.login()
+        skills=call('/api/skills',cookie=a)[2]['skills']
+        self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
+        self.assertEqual(sum(s['download_url'].startswith('/api/skills/') for s in skills),141)
+        target=next(s for s in skills if s['title']=='docx')
+        self.assertEqual(call(target['download_url'])[0],401)
+        download=call(target['download_url'],cookie=a)
+        self.assertEqual(download[0],200)
+        self.assertTrue(download[2].startswith('PK'))
+        self.assertEqual(call('/api/skills/bundle/download',cookie=a)[0],403)
+        c,csrf=self.admin()
+        self.assertEqual(call('/api/admin/skills','PUT',{**target,'csrf':csrf,'published':False},c)[0],200)
+        self.assertEqual(call(target['download_url'],cookie=a)[0],404)
+        self.assertFalse(any(s['id']==target['id'] for s in call('/api/skills',cookie=a)[2]['skills']))
+        self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
+
 if __name__=='__main__':unittest.main(verbosity=2)
 
