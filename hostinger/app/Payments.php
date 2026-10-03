@@ -7,6 +7,11 @@ final class Payments {
         'basica'=>['name'=>'Formação Básica em IA','amount'=>99700,'hours'=>10,'modules'=>8],
         'avancada'=>['name'=>'Formação Avançada em IA','amount'=>169900,'hours'=>20,'modules'=>10],
     ];
+    public static function products(string $environment): array {
+        $products=self::PRODUCTS;
+        if($environment==='sandbox')foreach($products as &$product)$product['amount']=100;
+        return $products;
+    }
     public const SCHEMA = "CREATE TABLE IF NOT EXISTS payment_orders (
         reference_id CHAR(32) PRIMARY KEY, buyer_hash CHAR(64) NOT NULL UNIQUE,
         course VARCHAR(16) NOT NULL, amount INT NOT NULL, name VARCHAR(120) NOT NULL,
@@ -67,7 +72,7 @@ final class Payments {
         $return=$origin.'/checkout.html#pedido='.$order['reference_id'].'&chave='.$secret;
         return ['reference_id'=>$order['reference_id'],'expiration_date'=>gmdate('Y-m-d\TH:i:s\Z',time()+7200),
             'customer'=>$order['customer'],'customer_modifiable'=>false,
-            'items'=>[['reference_id'=>$order['course'],'name'=>$product['name'],'quantity'=>1,'unit_amount'=>$product['amount']]],
+            'items'=>[['reference_id'=>$order['course'],'name'=>$product['name'],'quantity'=>1,'unit_amount'=>(int)$order['amount']]],
             'payment_methods'=>[['type'=>'PIX'],['type'=>'CREDIT_CARD']],
             'payment_methods_configs'=>[['type'=>'CREDIT_CARD','config_options'=>[['option'=>'INSTALLMENTS_LIMIT','value'=>'3']]]],
             'redirect_url'=>$return,'return_url'=>$return,'redirect_waiting_time'=>15,
@@ -157,7 +162,7 @@ final class Payments {
         $this->json(200,['received'=>true]);
     }
     public function publicRoute(string $path,string $method,array $data): never {
-        if($path==='/api/payments/config'&&$method==='GET')$this->json(200,['enabled'=>$this->ready(),'environment'=>$this->settings['environment'],'products'=>self::PRODUCTS]);
+        if($path==='/api/payments/config'&&$method==='GET')$this->json(200,['enabled'=>$this->ready(),'environment'=>$this->settings['environment'],'products'=>self::products($this->settings['environment'])]);
         if($path==='/api/payments/create'&&$method==='POST'){
             if(!$this->ready())$this->fail(503,'O pagamento online está sendo preparado. Fale com Luís Fernando para se matricular.');
             foreach(['key','course','name','email','cpf','phone'] as $field)if(!is_string($data[$field]??null))$this->fail(400,'Dados de matrícula inválidos.');
@@ -166,7 +171,7 @@ final class Payments {
             if(!is_string($secret)||!preg_match('/^[a-f0-9]{64}$/D',$secret)||!is_string($course)||!isset(self::PRODUCTS[$course])||strlen($name)<3||strlen($name)>120||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL)||!self::validCpf($cpf)||!preg_match('/^[1-9][0-9]{9,10}$/D',$phone)||($data['accepted']??false)!==true)$this->fail(400,'Confira seus dados e confirme as informações da formação.');
             if($this->app->limited('checkout:'.($_SERVER['REMOTE_ADDR']??''),10))$this->fail(429,'Aguarde alguns minutos antes de tentar novamente.');
             $this->install();$hash=hash('sha256',$secret);$ref=bin2hex(random_bytes(16));
-            $this->app->query('INSERT IGNORE INTO payment_orders(reference_id,buyer_hash,course,amount,name,email,environment,created,updated) VALUES(?,?,?,?,?,?,?,?,?)',[$ref,$hash,$course,self::PRODUCTS[$course]['amount'],$name,$email,$this->settings['environment'],time(),time()]);
+            $this->app->query('INSERT IGNORE INTO payment_orders(reference_id,buyer_hash,course,amount,name,email,environment,created,updated) VALUES(?,?,?,?,?,?,?,?,?)',[$ref,$hash,$course,self::products($this->settings['environment'])[$course]['amount'],$name,$email,$this->settings['environment'],time(),time()]);
             $o=$this->app->query('SELECT * FROM payment_orders WHERE buyer_hash=?',[$hash])->fetch();
             if($o['course']!==$course||$o['email']!==$email||$o['environment']!==$this->settings['environment'])$this->fail(409,'Reabra a matrícula para atualizar os dados.');
             if($o['pay_url'])$this->json(200,['url'=>$o['pay_url'],'reference'=>$o['reference_id']]);

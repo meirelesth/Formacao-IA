@@ -9,9 +9,13 @@ check(!Payments::signed($body,str_repeat('0',64),$token),'Forged webhook accepte
 check(!Payments::signed($body,hash('sha256','-'.$body),''),'Empty token accepted');
 check(Payments::validCpf('12345678909'),'CPF checksum rejected');
 check(!Payments::validCpf('11111111111')&&!Payments::validCpf('12345678900'),'Invalid CPF accepted');
+check(Payments::products('sandbox')['basica']['amount']===100&&Payments::products('sandbox')['avancada']['amount']===100,'Sandbox must charge one real');
+check(Payments::products('production')===Payments::PRODUCTS,'Production prices changed');
 $order=['reference_id'=>str_repeat('a',32),'course'=>'basica','amount'=>99700,'email'=>'student@example.com','customer'=>['email'=>'student@example.com']];
 $payload=Payments::payload($order,str_repeat('b',64),'https://luisfernando.online');
 check($payload['items'][0]['unit_amount']===99700,'Server price not used');
+$testOrder=$order;$testOrder['amount']=100;
+check(Payments::payload($testOrder,str_repeat('b',64),'https://luisfernando.online')['items'][0]['unit_amount']===100,'Sandbox order amount ignored');
 check(array_column($payload['payment_methods'],'type')===['PIX','CREDIT_CARD'],'Unrequested payment method');
 check($payload['payment_methods_configs'][0]['config_options']===[['option'=>'INSTALLMENTS_LIMIT','value'=>'3']],'Incorrect installment cap');
 check($payload['customer_modifiable']===false,'Buyer can change enrollment email');
