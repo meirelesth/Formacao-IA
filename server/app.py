@@ -267,7 +267,7 @@ class Application(Access):
             if not session: return respond('401 Unauthorized',{'error':'Entre para acessar o material.'})
             if not self.allowed_material(session,path.lstrip('/')): return respond('403 Forbidden',{'error':'Material não incluído na sua matrícula.'})
         target=(self.site/path.lstrip('/')).resolve()
-        public_names={'perfil-visitante.css','perfil-visitante.js','index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico','certificado.css','certificado.js'}
+        public_names={'checkout.html','checkout.css','checkout.js','perfil-visitante.css','perfil-visitante.js','index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico','certificado.css','certificado.js'}
         relative=path.lstrip('/')
         public=relative in public_names or relative.startswith(('assets/','materiais/'))
         if not public or not target.is_relative_to(self.site) or not target.is_file() or target.suffix not in {'.html','.css','.js','.json','.jpg','.png','.svg','.md','.ico','.pdf'}:
