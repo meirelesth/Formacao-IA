@@ -207,7 +207,7 @@ final class Payments {
                     if($t&&!(int)$t['used']&&(int)$t['expires']>time())$link='/ativar.html#'.$raw;else $state='REVIEW';
                 }
             }
-            $this->json(200,['state'=>$state,'environment'=>$o['environment'],'access_url'=>$link,'course'=>$o['course']]);
+            $this->json(200,['state'=>$state,'environment'=>$o['environment'],'access_url'=>$link,'course'=>$o['course'],'amount'=>(int)$o['amount']]);
         }
         $this->fail(404,'Recurso não encontrado.');
     }
