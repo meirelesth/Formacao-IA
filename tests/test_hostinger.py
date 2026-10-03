@@ -189,6 +189,9 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(status('4')[2]['state'],'WAITING')
         self.assertIsNone(status('4')[2]['access_url'])
         self.assertIsNone(status('3')[2]['access_url'])
+        self.assertIsNone(status('6')[2]['access_url'])
+        self.assertTrue(status('6')[2]['admin_test'])
+        self.assertEqual(status('6')[2]['amount'],100)
         basic=status('1');self.assertEqual(basic[0],200);link=basic[2]['access_url']
         self.assertTrue(link.startswith('/ativar.html#'))
         self.assertEqual(status('1')[2]['access_url'],link)
@@ -212,11 +215,16 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual({course['id'] for course in call('/catalogo.json',cookie=c)[2]['courses']},{'basica','avancada'})
 
     def test_31_payment_administration_protected(self):
+        self.assertEqual(call('/api/admin/payments/test')[0],401)
+        self.assertEqual(call('/api/admin/payments/test','POST',{})[0],401)
         self.assertEqual(call('/api/admin/payments/settings')[0],401)
         c,t=self.login()
         self.assertEqual(call('/api/admin/payments/settings',cookie=c)[0],403)
+        self.assertEqual(call('/api/admin/payments/test',cookie=c)[0],403)
         c,t=self.admin()
         self.assertEqual(call('/api/admin/payments/settings',cookie=c)[2]['configured'],False)
+        self.assertEqual(call('/api/admin/payments/test',cookie=c)[2]['products']['admin_test']['amount'],100)
+        self.assertEqual(call('/api/admin/payments/test','POST',{'csrf':'wrong'},c)[0],403)
         self.assertEqual(call('/api/admin/payments/settings','PUT',{'environment':'production','token':'','enabled':True,'csrf':t},c)[0],400)
         self.assertEqual(call('/api/admin/payments/settings','PUT',{'environment':'production','token':'fixture-only-token','enabled':False,'csrf':'wrong'},c)[0],403)
 

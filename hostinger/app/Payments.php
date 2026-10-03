@@ -12,6 +12,7 @@ final class Payments {
         if($environment==='sandbox')foreach($products as &$product)$product['amount']=100;
         return $products;
     }
+    public const ADMIN_TEST = ['name'=>'Teste administrativo de pagamento','amount'=>100,'hours'=>0,'modules'=>0];
     public const SCHEMA = "CREATE TABLE IF NOT EXISTS payment_orders (
         reference_id CHAR(32) PRIMARY KEY, buyer_hash CHAR(64) NOT NULL UNIQUE,
         course VARCHAR(16) NOT NULL, amount INT NOT NULL, name VARCHAR(120) NOT NULL,
@@ -68,13 +69,13 @@ final class Payments {
         return $token!==''&&preg_match('/^[a-fA-F0-9]{64}$/D',$signature)===1&&hash_equals(hash('sha256',$token.'-'.$body),strtolower($signature));
     }
     public static function payload(array $order,string $secret,string $origin): array {
-        $product=self::PRODUCTS[$order['course']];
+        $product=$order['course']==='admin_test'?self::ADMIN_TEST:self::PRODUCTS[$order['course']];
         $return=$origin.'/checkout.html#pedido='.$order['reference_id'].'&chave='.$secret;
         return ['reference_id'=>$order['reference_id'],'expiration_date'=>gmdate('Y-m-d\TH:i:s\Z',time()+7200),
             'customer'=>$order['customer'],'customer_modifiable'=>false,
             'items'=>[['reference_id'=>$order['course'],'name'=>$product['name'],'quantity'=>1,'unit_amount'=>(int)$order['amount']]],
             'payment_methods'=>[['type'=>'PIX'],['type'=>'CREDIT_CARD']],
-            'payment_methods_configs'=>[['type'=>'CREDIT_CARD','config_options'=>[['option'=>'INSTALLMENTS_LIMIT','value'=>'3']]]],
+            'payment_methods_configs'=>[['type'=>'CREDIT_CARD','config_options'=>[['option'=>'INSTALLMENTS_LIMIT','value'=>$order['course']==='admin_test'?'1':'3']]]],
             'redirect_url'=>$return,'return_url'=>$return,'redirect_waiting_time'=>15,
             'notification_urls'=>[$origin.'/api/payments/webhook'], 'payment_notification_urls'=>[$origin.'/api/payments/webhook']];
     }
@@ -102,7 +103,7 @@ final class Payments {
         $this->app->db->beginTransaction();
         try{
             $o=$this->app->query('SELECT * FROM payment_orders WHERE reference_id=? FOR UPDATE',[$ref])->fetch();
-            if(!$o||$o['state']!=='PAID'||(int)$o['fulfilled']||$o['environment']!=='production'){$this->app->db->commit();return;}
+            if(!$o||$o['state']!=='PAID'||(int)$o['fulfilled']||$o['environment']!=='production'||$o['course']==='admin_test'){$this->app->db->commit();return;}
             // Same email lock as manual invitations. Two purchases preserve both course grants.
             $lock=hash('sha256','token:invite:'.$o['email']);
             $this->app->query('INSERT IGNORE INTO limits(key_hash,window_start,count) VALUES(?,?,0)',[$lock,time()]);
@@ -161,17 +162,17 @@ final class Payments {
         }catch(Throwable){$this->fail(503,'A confirmação será processada novamente.');}
         $this->json(200,['received'=>true]);
     }
-    public function publicRoute(string $path,string $method,array $data): never {
+    public function publicRoute(string $path,string $method,array $data,bool $adminTest=false): never {
         if($path==='/api/payments/config'&&$method==='GET')$this->json(200,['enabled'=>$this->ready(),'environment'=>$this->settings['environment'],'products'=>self::products($this->settings['environment'])]);
         if($path==='/api/payments/create'&&$method==='POST'){
             if(!$this->ready())$this->fail(503,'O pagamento online está sendo preparado. Fale com Luís Fernando para se matricular.');
             foreach(['key','course','name','email','cpf','phone'] as $field)if(!is_string($data[$field]??null))$this->fail(400,'Dados de matrícula inválidos.');
             $secret=$data['key'];$course=$data['course'];$name=trim($data['name']);$email=strtolower(trim($data['email']));
             $cpf=preg_replace('/\D/','',$data['cpf']??'');$phone=preg_replace('/\D/','',$data['phone']??'');
-            if(!is_string($secret)||!preg_match('/^[a-f0-9]{64}$/D',$secret)||!is_string($course)||!isset(self::PRODUCTS[$course])||strlen($name)<3||strlen($name)>120||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL)||!self::validCpf($cpf)||!preg_match('/^[1-9][0-9]{9,10}$/D',$phone)||($data['accepted']??false)!==true)$this->fail(400,'Confira seus dados e confirme as informações da formação.');
+            if(!is_string($secret)||!preg_match('/^[a-f0-9]{64}$/D',$secret)||!is_string($course)||!($adminTest?$course==='admin_test':isset(self::PRODUCTS[$course]))||strlen($name)<3||strlen($name)>120||strlen($email)>254||!filter_var($email,FILTER_VALIDATE_EMAIL)||!self::validCpf($cpf)||!preg_match('/^[1-9][0-9]{9,10}$/D',$phone)||($data['accepted']??false)!==true)$this->fail(400,'Confira seus dados e confirme as informações da formação.');
             if($this->app->limited('checkout:'.($_SERVER['REMOTE_ADDR']??''),10))$this->fail(429,'Aguarde alguns minutos antes de tentar novamente.');
             $this->install();$hash=hash('sha256',$secret);$ref=bin2hex(random_bytes(16));
-            $this->app->query('INSERT IGNORE INTO payment_orders(reference_id,buyer_hash,course,amount,name,email,environment,created,updated) VALUES(?,?,?,?,?,?,?,?,?)',[$ref,$hash,$course,self::products($this->settings['environment'])[$course]['amount'],$name,$email,$this->settings['environment'],time(),time()]);
+            $this->app->query('INSERT IGNORE INTO payment_orders(reference_id,buyer_hash,course,amount,name,email,environment,created,updated) VALUES(?,?,?,?,?,?,?,?,?)',[$ref,$hash,$course,$adminTest?100:self::products($this->settings['environment'])[$course]['amount'],$name,$email,$this->settings['environment'],time(),time()]);
             $o=$this->app->query('SELECT * FROM payment_orders WHERE buyer_hash=?',[$hash])->fetch();
             if($o['course']!==$course||$o['email']!==$email||$o['environment']!==$this->settings['environment'])$this->fail(409,'Reabra a matrícula para atualizar os dados.');
             if($o['pay_url'])$this->json(200,['url'=>$o['pay_url'],'reference'=>$o['reference_id']]);
@@ -198,7 +199,7 @@ final class Payments {
             $this->install();$o=$this->app->query('SELECT * FROM payment_orders WHERE reference_id=? AND buyer_hash=?',[$ref,hash('sha256',$key)])->fetch();
             if(!$o)$this->fail(404,'Matrícula não encontrada.');
             $link=null;$state=$o['state'];
-            if($state==='PAID'&&$o['environment']==='production'){
+            if($state==='PAID'&&$o['environment']==='production'&&$o['course']!=='admin_test'){
                 $this->fulfill($ref);
                 $user=$this->app->query('SELECT active FROM users WHERE email=?',[$o['email']])->fetch();
                 if($user){if((int)$user['active'])$link='/entrar.html';else $state='REVIEW';}
@@ -207,11 +208,16 @@ final class Payments {
                     if($t&&!(int)$t['used']&&(int)$t['expires']>time())$link='/ativar.html#'.$raw;else $state='REVIEW';
                 }
             }
-            $this->json(200,['state'=>$state,'environment'=>$o['environment'],'access_url'=>$link,'course'=>$o['course'],'amount'=>(int)$o['amount']]);
+            $this->json(200,['state'=>$state,'environment'=>$o['environment'],'access_url'=>$link,'course'=>$o['course'],'amount'=>(int)$o['amount'],'admin_test'=>$o['course']==='admin_test']);
         }
         $this->fail(404,'Recurso não encontrado.');
     }
     public function adminRoute(string $path,string $method,array $data): never {
+        if($path==='/api/admin/payments/test'&&$method==='GET')$this->json(200,['enabled'=>$this->ready(),'environment'=>$this->settings['environment'],'products'=>['admin_test'=>self::ADMIN_TEST]]);
+        if($path==='/api/admin/payments/test'&&$method==='POST'){
+            $data['course']='admin_test';
+            $this->publicRoute('/api/payments/create','POST',$data,true);
+        }
         if($path==='/api/admin/payments/settings'){
             if($method==='GET'){
                 $file=$this->private.'/pagbank-diagnostic.json';$diagnostic=is_file($file)?json_decode(file_get_contents($file),true):null;
