@@ -29,7 +29,7 @@ final class VisitorProfile {
         $choices = [
             'motivation' => ['curiosidade', 'trabalho', 'negocio'],
             'occupation' => ['empresa', 'empreendedor', 'autonomo', 'estudante', 'outro'],
-            'ai' => ['chatgpt', 'claude', 'gemini', 'outra', 'orientacao'],
+            'ai' => ['chatgpt', 'claude', 'orientacao'],
         ];
         if (!is_string($data['request_id'] ?? null) || !preg_match('/^[a-f0-9]{32}$/D', $data['request_id'])) return null;
         $clean = ['request_id' => $data['request_id']];
