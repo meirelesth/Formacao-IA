@@ -8,9 +8,10 @@ const fs = require('node:fs');
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   for(const path of ['entrar.html','ativar.html','redefinir.html','index.html','checkout.html?curso=basica','checkout.html?curso=avancada']){
-   await page.goto('http://127.0.0.1:8080/'+path);await page.waitForLoadState('networkidle');
+   await page.goto('http://127.0.0.1:8080/'+path);
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Horizontal overflow ${path} ${width}`);checks++;
    if(path.startsWith('checkout.html')){
+    await page.locator('#availability').waitFor({state:'visible'});
     assert(await page.locator('h1').isVisible());
     assert(await page.locator('.teacher img').evaluate(el=>el.complete&&el.naturalWidth>0));
     assert(await page.locator('#product-price').textContent().then(t=>t.includes(path.includes('avancada')?'1.699':'997')));
