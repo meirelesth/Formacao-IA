@@ -33,4 +33,6 @@ foreach($jobs as $job){
         error_log('Formacao: delivery failed; no credentials or tokens logged');
     }
 }
+VisitorProfile::process($app);
 flock($lock,LOCK_UN);fclose($lock);
+

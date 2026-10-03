@@ -188,6 +188,10 @@ class Application(Access):
                 return respond('400 Bad Request',{'error':'JSON inválido.'})
         else:
             data={}
+        if path == '/api/visitor-profile/config' and method == 'GET':
+            return respond('200 OK', {'enabled': False})
+        if path == '/api/visitor-profile' and method == 'POST':
+            return respond('503 Service Unavailable', {'error': 'O formulário ainda não está disponível para envio.'})
         session=self.session(environ)
         skills=self.skills_route(path,method,data,session,respond)
         if skills is not None: return skills
@@ -263,7 +267,7 @@ class Application(Access):
             if not session: return respond('401 Unauthorized',{'error':'Entre para acessar o material.'})
             if not self.allowed_material(session,path.lstrip('/')): return respond('403 Forbidden',{'error':'Material não incluído na sua matrícula.'})
         target=(self.site/path.lstrip('/')).resolve()
-        public_names={'index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico','certificado.css','certificado.js'}
+        public_names={'perfil-visitante.css','perfil-visitante.js','index.html','styles.css','app.js','aluno.html','aluno.css','aluno.js','entrar.html','entrar.js','catalogo.json','login.css','ativar.html','redefinir.html','acesso.js','admin.html','admin.js','planos.html','planos.css','portfolio.css','favicon.ico','certificado.css','certificado.js'}
         relative=path.lstrip('/')
         public=relative in public_names or relative.startswith(('assets/','materiais/'))
         if not public or not target.is_relative_to(self.site) or not target.is_file() or target.suffix not in {'.html','.css','.js','.json','.jpg','.png','.svg','.md','.ico','.pdf'}:
@@ -295,5 +299,6 @@ def main():
         with make_server('127.0.0.1',args.port,app) as httpd: httpd.serve_forever()
 
 if __name__=='__main__': main()
+
 
 

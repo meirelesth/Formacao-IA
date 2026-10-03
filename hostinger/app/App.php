@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/VisitorProfile.php';
 final class FormacaoApp {
     public PDO $db;
     public array $config;
@@ -117,6 +118,17 @@ final class FormacaoApp {
             try{$obj=json_decode($body,false,512,JSON_THROW_ON_ERROR);if(!$obj instanceof stdClass)$this->fail(400,'JSON inválido.');$data=json_decode($body,true,512,JSON_THROW_ON_ERROR);}catch(JsonException){$this->fail(400,'JSON inválido.');}
         }
         if($path==='/healthz'&&$method==='GET'){$this->query('SELECT 1');$this->json(200,['ok'=>true]);}
+        if($path==='/api/visitor-profile/config'&&$method==='GET')$this->json(200,['enabled'=>VisitorProfile::ready($this->config)]);
+        if($path==='/api/visitor-profile'&&$method==='POST'){
+            if(!VisitorProfile::ready($this->config))$this->fail(503,'O formulário ainda não está disponível para envio.');
+            if($this->limited('visitor-profile:'.($_SERVER['REMOTE_ADDR']??''),5))$this->fail(429,'Muitas tentativas. Tente novamente mais tarde.');
+            $profile=VisitorProfile::validate($data);
+            if($profile===null)$this->fail(400,'Confira as opções selecionadas e o tamanho dos campos.');
+            $this->db->exec(VisitorProfile::SCHEMA);
+            // A retry with the same request id keeps one durable response.
+            $this->query('INSERT IGNORE INTO visitor_profiles(request_id,payload,available,created) VALUES(?,?,?,?)',[$profile['request_id'],json_encode($profile,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),time(),time()]);
+            $this->json(202,['ok'=>true,'message'=>'Respostas registradas. Obrigado por participar.']);
+        }
         $needsSession=str_starts_with($path,'/api/')||in_array($path,['/catalogo.json','/aluno.html','/admin.html'],true)||str_starts_with($path,'/materiais/');
         $session=$needsSession?$this->session():null;$ip=$_SERVER['REMOTE_ADDR']??'';
         if($path==='/api/session'&&$method==='GET')$this->json(200,$session?['authenticated'=>true,'user'=>['name'=>$session['name'],'email'=>$session['email'],'role'=>$session['role']],'csrf'=>$session['csrf']]:['authenticated'=>false]);
@@ -196,7 +208,7 @@ final class FormacaoApp {
             if(!$session)$this->fail(401,'Entre para acessar o material.');$catalog=$this->catalog($session);$allowed=array_column($catalog['materials'],'path');foreach($catalog['courses'] as $c)foreach($c['modules'] as $m)foreach($m['lessons'] as $l)$allowed[]=$l['material']??'';
             if(!in_array($relative,$allowed,true))$this->fail(403,'Material não incluído na sua matrícula.');$root=$this->private;
         }else{
-            $names=['index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
+            $names=['perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
             if(!in_array($relative,$names,true)&&!(str_starts_with($relative,'assets/')&&in_array(strtolower(pathinfo($relative,PATHINFO_EXTENSION)),['svg','png','jpg','jpeg','ico'],true)))$this->fail(404,'Página não encontrada.');
         }
         $target=realpath($root.'/'.$relative);$base=realpath($root);
@@ -276,4 +288,5 @@ final class FormacaoApp {
         $this->fail(404,'Recurso não encontrado.');
     }
 }
+
 

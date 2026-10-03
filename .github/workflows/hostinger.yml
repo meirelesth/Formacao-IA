@@ -37,6 +37,8 @@ jobs:
           node-version: '22'
       - name: Lint PHP
         run: find hostinger tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Validate visitor profile input
+        run: php tests/visitor-profile.php
       - name: Audit PHP dependencies
         run: |
           composer install --working-dir=hostinger --no-dev --no-interaction --prefer-dist
@@ -59,6 +61,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Validate responsive frontend with PHP backend
         run: node tests/browser.cjs
+      - name: Validate optional visitor questionnaire
+        run: node tests/visitor-profile.cjs
       - uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -69,3 +73,4 @@ jobs:
         with:
           name: hostinger-responsive-evidence
           path: browser-results/
+

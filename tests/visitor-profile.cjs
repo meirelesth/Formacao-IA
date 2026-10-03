@@ -1,0 +1,43 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');fs.mkdirSync('browser-results',{recursive:true});
+(async()=>{
+ const b=await chromium.launch({headless:true});let checks=0;
+ for(const width of [360,390,768,1440]){
+  const context=await b.newContext({viewport:{width,height:900}});
+  const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));let ready=true,fail=false,payloads=[];
+  await p.route('**/api/visitor-profile/config',r=>r.fulfill({json:{enabled:ready}}));
+  await p.route('**/api/visitor-profile',r=>{payloads.push(r.request().postDataJSON());return r.fulfill({status:fail?503:202,json:fail?{error:'Teste de falha: tente novamente.'}:{ok:true}})});
+  await p.goto('http://127.0.0.1:8080/index.html');
+  assert((await p.title()).includes('Luís Fernando'));
+  await p.locator('#visitor-profile').waitFor({state:'visible'});
+  const expert=p.getByRole('link',{name:'Não quero responder o formulário Falar com o especialista Luís Fernando →'});
+  assert((await expert.getAttribute('href')).startsWith('https://wa.me/5598981432271'));assert.equal(await expert.getAttribute('target'),'_blank');checks+=2;
+  assert(await p.locator('h1').textContent());checks+=2;
+  await p.locator('[data-next]').click();assert((await p.locator('.lf-profile-status').textContent()).includes('Marque'));checks++;
+  await p.keyboard.press('Escape');assert(!(await p.locator('#visitor-profile').isVisible()));
+  await p.reload();await p.waitForTimeout(1500);assert(!(await p.locator('#visitor-profile').isVisible()));checks+=2;
+  await p.getByRole('button',{name:'Conte o que você quer aprender com IA'}).click();
+  await p.locator('[name=motivation][value=curiosidade]').check();
+  await p.locator('[name=occupation][value=outro]').check();
+  await p.locator('[data-next]').click();
+  await p.locator('[data-send]').click();assert((await p.locator('.lf-profile-status').textContent()).includes('Escolha'));checks++;
+  await p.locator('[name=ai][value=orientacao]').check();
+  await p.locator('[name=interests][value=possibilidades]').check();
+  await p.locator('[name=dream]').fill('Quero aprender por curiosidade.');
+  assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  const box=await p.locator('#visitor-profile').boundingBox();assert(box.x>=0&&box.x+box.width<=width+1);
+  await p.screenshot({path:'browser-results/profile-'+width+'.png'});
+  fail=true;await p.locator('[data-send]').click();await p.getByText('Teste de falha: tente novamente.').waitFor();
+  assert.equal(await p.locator('[name=dream]').inputValue(),'Quero aprender por curiosidade.');checks+=3;
+  fail=false;await p.locator('[data-send]').click();await p.getByText('Obrigado! Suas respostas foram registradas e vão ajudar a preparar as formações.').waitFor();
+  assert.equal(payloads[0].request_id,payloads[1].request_id);assert.equal(payloads[1].motivation,'curiosidade');checks+=2;
+  await p.locator('[data-done]').click();await p.reload();await p.waitForTimeout(1500);assert(!(await p.locator('#visitor-profile').isVisible()));checks++;
+  assert.deepEqual(errors,[]);checks++;await context.close();
+ }
+ const ctx=await b.newContext();const page=await ctx.newPage();
+ await page.route('**/api/visitor-profile/config',r=>r.fulfill({json:{enabled:false}}));
+ await page.goto('http://127.0.0.1:8080/index.html');await page.waitForTimeout(1600);
+ assert(!(await page.locator('#visitor-profile').isVisible()));assert.equal(await page.locator('.lf-profile-reopen').count(),0);checks+=2;
+ await b.close();console.log(checks+' verificações passaram: abertura, fechamento, sessão, reabertura, validação, falha/retry, idempotência, sucesso e configuração desativada. Larguras: 360, 390, 768 e 1440. Browser plugin not available; Playwright usado.');
+})().catch(e=>{console.error(e);process.exit(1)});

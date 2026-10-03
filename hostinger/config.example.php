@@ -14,9 +14,13 @@ return [
     'admin_totp_secret' => 'SUBSTITUA_PELA_CHAVE_BASE32_GERADA_LOCALMENTE',
     'allow_http' => false,
     // SMTP opcional; sem ele, o professor compartilha links pelo painel.
+    // Ativar somente após definir o destinatário e conferir a entrega.
+    'visitor_survey_enabled' => false,
+    'visitor_survey_recipient' => '',
     'smtp_host' => '',
     'smtp_port' => 587,
     'smtp_user' => '',
     'smtp_password' => '',
     'smtp_from' => '',
 ];
+
