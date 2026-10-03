@@ -70,7 +70,7 @@ final class Payments {
             'items'=>[['reference_id'=>$order['course'],'name'=>$product['name'],'quantity'=>1,'unit_amount'=>$product['amount']]],
             'payment_methods'=>[['type'=>'PIX'],['type'=>'CREDIT_CARD']],
             'payment_methods_configs'=>[['type'=>'CREDIT_CARD','config_options'=>[['option'=>'INSTALLMENTS_LIMIT','value'=>'3']]]],
-            'redirect_url'=>$return,'return_url'=>$return,'redirect_waiting_time'=>3,
+            'redirect_url'=>$return,'return_url'=>$return,'redirect_waiting_time'=>15,
             'notification_urls'=>[$origin.'/api/payments/webhook'], 'payment_notification_urls'=>[$origin.'/api/payments/webhook']];
     }
     public static function paidCharge(array $remote,array $order): ?string {
