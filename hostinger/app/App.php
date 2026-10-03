@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/VisitorProfile.php';
+require_once __DIR__.'/Payments.php';
 final class FormacaoApp {
     public PDO $db;
     public array $config;
@@ -109,6 +110,7 @@ final class FormacaoApp {
         $decoded=rawurldecode($url);if(str_contains($decoded,"\0")||str_contains($decoded,'\\'))$this->fail(400,'Caminho inválido.');
         $parts=[];foreach(explode('/',$decoded) as $part){if($part==='..')array_pop($parts);elseif($part!==''&&$part!=='.')$parts[]=$part;}$path='/'.implode('/',$parts);
         if(!in_array($method,['GET','POST','PUT'],true))$this->fail(405,'Método não permitido.');
+        if($path==='/api/payments/webhook')(new Payments($this,$this->private))->webhook();
         $data=[];
         if($method!=='GET'){
             if(($_SERVER['HTTP_ORIGIN']??'')!==$this->config['origin'])$this->fail(403,'Origem não permitida.');
@@ -129,6 +131,7 @@ final class FormacaoApp {
             $this->query('INSERT IGNORE INTO visitor_profiles(request_id,payload,available,created) VALUES(?,?,?,?)',[$profile['request_id'],json_encode($profile,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),time(),time()]);
             $this->json(202,['ok'=>true,'message'=>'Respostas registradas. Obrigado por participar.']);
         }
+        if(str_starts_with($path,'/api/payments/'))(new Payments($this,$this->private))->publicRoute($path,$method,$data);
         $needsSession=str_starts_with($path,'/api/')||in_array($path,['/catalogo.json','/aluno.html','/admin.html'],true)||str_starts_with($path,'/materiais/');
         $session=$needsSession?$this->session():null;$ip=$_SERVER['REMOTE_ADDR']??'';
         if($path==='/api/session'&&$method==='GET')$this->json(200,$session?['authenticated'=>true,'user'=>['name'=>$session['name'],'email'=>$session['email'],'role'=>$session['role']],'csrf'=>$session['csrf']]:['authenticated'=>false]);
@@ -186,7 +189,7 @@ final class FormacaoApp {
         if(str_starts_with($path,'/api/')){
             if(!$session)$this->fail(401,'Entre para acessar sua formação.');
             if($method!=='GET')$this->csrf($data,$session);
-            if(str_starts_with($path,'/api/admin/')){if($session['role']!=='admin')$this->fail(403,'Acesso exclusivo da administração.');$this->admin($path,$method,$data,$session);}
+            if(str_starts_with($path,'/api/admin/')){if($session['role']!=='admin')$this->fail(403,'Acesso exclusivo da administração.');if(str_starts_with($path,'/api/admin/payments/'))(new Payments($this,$this->private))->adminRoute($path,$method,$data);$this->admin($path,$method,$data,$session);}
             if($path==='/api/skills')$this->skillRoute($method,$data,false);
             if(preg_match('~^/api/skills/(bundle|[0-9]+)/download$~D',$path,$match))$this->skillDownload($method,$match[1],$session);
             if($path==='/api/logout'&&$method==='POST'){$this->query('DELETE FROM sessions WHERE token_hash=?',[$session['token_hash']]);$this->cookie('',-3600);$this->json(200,['ok'=>true]);}
@@ -208,7 +211,7 @@ final class FormacaoApp {
             if(!$session)$this->fail(401,'Entre para acessar o material.');$catalog=$this->catalog($session);$allowed=array_column($catalog['materials'],'path');foreach($catalog['courses'] as $c)foreach($c['modules'] as $m)foreach($m['lessons'] as $l)$allowed[]=$l['material']??'';
             if(!in_array($relative,$allowed,true))$this->fail(403,'Material não incluído na sua matrícula.');$root=$this->private;
         }else{
-            $names=['respostas-visitantes.html','respostas-visitantes.css','respostas-visitantes.js','perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
+            $names=['checkout.html','checkout.css','checkout.js','respostas-visitantes.html','respostas-visitantes.css','respostas-visitantes.js','perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
             if(!in_array($relative,$names,true)&&!(str_starts_with($relative,'assets/')&&in_array(strtolower(pathinfo($relative,PATHINFO_EXTENSION)),['svg','png','jpg','jpeg','ico'],true)))$this->fail(404,'Página não encontrada.');
         }
         $target=realpath($root.'/'.$relative);$base=realpath($root);

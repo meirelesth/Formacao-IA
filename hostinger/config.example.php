@@ -13,6 +13,10 @@ return [
     'setup_key' => 'SUBSTITUA_POR_32_CARACTERES_ALEATORIOS_OU_MAIS',
     'admin_totp_secret' => 'SUBSTITUA_PELA_CHAVE_BASE32_GERADA_LOCALMENTE',
     'allow_http' => false,
+    // Ou configure pelo painel administrativo: o token fica fora de public_html.
+    'pagbank_enabled' => false,
+    'pagbank_environment' => 'sandbox', // production somente com token de produção
+    'pagbank_token' => '',
     // SMTP opcional; sem ele, o professor compartilha links pelo painel.
     // Formulário grava no banco sem SMTP. Envio futuro é ativado separadamente.
     'visitor_survey_enabled' => true,

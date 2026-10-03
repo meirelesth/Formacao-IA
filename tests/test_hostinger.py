@@ -180,5 +180,45 @@ class HostingerTests(unittest.TestCase):
         self.assertFalse(any(s['id']==target['id'] for s in call('/api/skills',cookie=a)[2]['skills']))
         self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
 
+    def test_30_payment_access_and_duplicate_notifications(self):
+        fixture('seed-payments')
+        def status(digit):
+            return call('/api/payments/status','POST',{'reference':digit*32,'key':digit*64})
+        self.assertEqual(call('/api/payments/config')[2]['enabled'],False)
+        self.assertEqual(call('/api/payments/create','POST',{})[0],503)
+        self.assertEqual(status('4')[2]['state'],'WAITING')
+        self.assertIsNone(status('4')[2]['access_url'])
+        self.assertIsNone(status('3')[2]['access_url'])
+        basic=status('1');self.assertEqual(basic[0],200);link=basic[2]['access_url']
+        self.assertTrue(link.startswith('/ativar.html#'))
+        self.assertEqual(status('1')[2]['access_url'],link)
+        self.assertTrue(status('2')[2]['access_url'].startswith('/ativar.html#'))
+        info=json.loads(fixture('inspect-payments'))
+        self.assertEqual(len(info['invites']),2)
+        for invite in info['invites']:
+            self.assertEqual(set(json.loads(invite['courses'])),{'basica','avancada'})
+        self.assertEqual(info['orders'][2]['fulfilled'],0)
+        self.assertEqual(info['orders'][3]['fulfilled'],0)
+        bad=call('/api/payments/status','POST',{'reference':'1'*32,'key':'f'*64})
+        self.assertEqual(bad[0],404)
+        self.assertEqual(call('/api/payments/status','POST',{'reference':'1'*32,'key':'1'*64},origin='https://evil.example')[0],403)
+        self.assertEqual(call('/api/activate','POST',{'token':link.split('#')[1],'password':'123456'})[0],200)
+        cookie,_=self.login('newpay@example.com','123456')
+        catalog=call('/catalogo.json',cookie=cookie)[2]
+        self.assertEqual({c['id'] for c in catalog['courses']},{'basica','avancada'})
+        self.assertEqual(status('1')[2]['access_url'],'/entrar.html')
+        self.assertEqual(status('5')[2]['access_url'],'/entrar.html')
+        c,_=self.login()
+        self.assertEqual({course['id'] for course in call('/catalogo.json',cookie=c)[2]['courses']},{'basica','avancada'})
+
+    def test_31_payment_administration_protected(self):
+        self.assertEqual(call('/api/admin/payments/settings')[0],401)
+        c,t=self.login()
+        self.assertEqual(call('/api/admin/payments/settings',cookie=c)[0],403)
+        c,t=self.admin()
+        self.assertEqual(call('/api/admin/payments/settings',cookie=c)[2]['configured'],False)
+        self.assertEqual(call('/api/admin/payments/settings','PUT',{'environment':'production','token':'','enabled':True,'csrf':t},c)[0],400)
+        self.assertEqual(call('/api/admin/payments/settings','PUT',{'environment':'production','token':'fixture-only-token','enabled':False,'csrf':'wrong'},c)[0],403)
+
 if __name__=='__main__':unittest.main(verbosity=2)
 

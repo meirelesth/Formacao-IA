@@ -39,6 +39,8 @@ jobs:
         run: find hostinger tests -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Validate visitor profile input
         run: php tests/visitor-profile.php
+      - name: Validate payment authenticity and checkout rules
+        run: php tests/payments.php
       - name: Audit PHP dependencies
         run: |
           composer install --working-dir=hostinger --no-dev --no-interaction --prefer-dist
@@ -73,4 +75,3 @@ jobs:
         with:
           name: hostinger-responsive-evidence
           path: browser-results/
-

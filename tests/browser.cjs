@@ -7,9 +7,19 @@ const fs = require('node:fs');
  for(const width of widths){
   const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  for(const path of ['entrar.html','ativar.html','redefinir.html','index.html']){
+  for(const path of ['entrar.html','ativar.html','redefinir.html','index.html','checkout.html?curso=basica','checkout.html?curso=avancada']){
    await page.goto('http://127.0.0.1:8080/'+path);await page.waitForLoadState('networkidle');
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Horizontal overflow ${path} ${width}`);checks++;
+   if(path.startsWith('checkout.html')){
+    assert(await page.locator('h1').isVisible());
+    assert(await page.locator('.teacher img').evaluate(el=>el.complete&&el.naturalWidth>0));
+    assert(await page.locator('#product-price').textContent().then(t=>t.includes(path.includes('avancada')?'1.699':'997')));
+    await page.locator('#buyer-name').fill('Teste matrícula');await page.locator('#buyer-email').fill('checkout@example.com');
+    await page.locator('#buyer-cpf').fill('12345678909');await page.locator('#buyer-phone').fill('11999999999');
+    await page.locator('[name=accepted]').check();await page.locator('#pay-button').click();
+    assert(await page.locator('#checkout-error').textContent().then(t=>t.includes('sendo preparado')));
+    await page.screenshot({path:`browser-results/checkout-${path.includes('avancada')?'advanced':'basic'}-${width}.png`,fullPage:true});checks+=4;
+   }
    if(path==='entrar.html'){
     const input=await page.locator('#email').boundingBox();assert(input.width>=240&&input.x>=0&&input.x+input.width<=width);
     await page.locator('#show-password').click();assert.equal(await page.locator('#password').getAttribute('type'),'text');
@@ -41,6 +51,8 @@ const fs = require('node:fs');
   await page.route('**/catalogo.json?*',r=>r.fulfill({json:JSON.parse(fs.readFileSync('catalogo.json','utf8'))}));
   await page.route('**/api/skills',r=>r.fulfill({json:{skills:items.filter(s=>s.published)}}));
   await page.route('**/api/admin/students',r=>r.fulfill({json:{students:[],invitations:[]}}));
+  await page.route('**/api/admin/payments/settings',r=>r.fulfill({json:{configured:false,enabled:false,environment:'sandbox'}}));
+  await page.route('**/api/admin/payments/orders',r=>r.fulfill({json:{orders:[]}}));
   await page.route('**/api/admin/skills',r=>{if(r.request().method()==='GET')return r.fulfill({json:{skills:items}});const data=r.request().postDataJSON();if(data.id)items=items.map(s=>s.id===data.id?{...s,...data}:s);else items.push({...data,id:2,updated:1770000000});return r.fulfill({json:{ok:true,id:data.id||2}});});
   await page.route('**/aluno.html',r=>r.fulfill({contentType:'text/html',body:fs.readFileSync('aluno.html','utf8')}));
   await page.goto('http://127.0.0.1:8080/aluno.html#skills');
@@ -63,4 +75,3 @@ const fs = require('node:fs');
  }
  await browser.close();console.log(`${checks} browser checks passed across ${widths.join(', ')}px`);
 })().catch(e=>{console.error(e);process.exit(1)});
-

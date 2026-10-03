@@ -6,3 +6,5 @@
 
 
 #skills-admin{margin-top:30px}#skill-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}#skill-form label{display:grid;gap:8px}#skill-form textarea,#skill-form select,#skill-form input:not([type=checkbox]){width:100%;min-width:0;padding:12px;border:1px solid #d9d2c6;background:#fffdf8;font:inherit}#skill-form p,#skill-form>div{grid-column:1/-1;line-height:1.6}#skill-form .check{display:flex;align-items:center}#skill-form textarea{resize:vertical}#admin-skills .student{overflow-wrap:anywhere}@media(max-width:640px){#skill-form{grid-template-columns:1fr}}
+
+#payments-admin{margin-top:30px}#payment-settings{max-width:620px}#payment-settings select{width:100%;padding:12px;border:1px solid #d9d2c6;background:#fffdf8;font:inherit}#payment-settings p{font-size:13px;line-height:1.7}#payment-orders .student{overflow-wrap:anywhere}
