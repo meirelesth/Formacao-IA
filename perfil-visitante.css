@@ -33,3 +33,7 @@ body.lf-profile-open{overflow:hidden}
 .lf-profile-expert strong{display:block;font-size:22px;font-weight:800;line-height:1.25;max-width:480px}
 .lf-profile-expert:hover{filter:brightness(1.04);box-shadow:0 10px 28px #0f1a2b30}
 @media(max-width:480px){.lf-profile-expert{min-height:120px;padding:22px 16px;border-radius:16px}.lf-profile-expert strong{font-size:20px}.lf-profile-expert span{font-size:14px}}
+
+/* Compact questionnaire: all questions on one screen. */
+.lf-profile h2{font-size:26px;margin:14px 0 8px}.lf-profile fieldset{margin:16px 0}.lf-profile-choice{min-height:38px;padding:8px 10px}.lf-profile legend{margin-bottom:8px}.lf-profile-more{font-size:13px;margin:14px 0}.lf-profile-more summary{cursor:pointer;color:#96672e;font-weight:600}.lf-profile-more .lf-profile-label{margin-top:14px}.lf-profile-expert{margin-top:18px;min-height:100px;padding:20px 16px}
+@media(max-width:480px){.lf-profile-options{grid-template-columns:1fr 1fr;gap:6px}.lf-profile-choice{font-size:12px;gap:7px;padding:8px}.lf-profile-content{padding-inline:16px}.lf-profile-header{padding-inline:16px}.lf-profile h2{font-size:23px}.lf-profile-expert strong{font-size:19px}.lf-profile-expert{min-height:110px}}
