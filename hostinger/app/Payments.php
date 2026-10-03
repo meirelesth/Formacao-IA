@@ -41,7 +41,17 @@ final class Payments {
         $context=stream_context_create(['http'=>['method'=>$payload===null?'GET':'POST','header'=>implode("\r\n",$headers),'content'=>$body??'','timeout'=>15,'ignore_errors'=>true,'follow_location'=>0], 'ssl'=>['verify_peer'=>true,'verify_peer_name'=>true]]);
         $response=@file_get_contents($base.$path,false,$context);
         $status=0;foreach($http_response_header??[] as $line)if(preg_match('~^HTTP/\S+ (\d+)~',$line,$m))$status=(int)$m[1];
-        if($response===false||$status<200||$status>=300){error_log('PagBank: request failed HTTP '.$status);throw new RuntimeException('PagBank unavailable');}
+        if($response===false||$status<200||$status>=300){
+            // Keep only status/error identifiers. Never persist provider payloads or credentials.
+            $codes=[];$parameters=[];$failure=json_decode($response?:'{}',true);
+            foreach(is_array($failure)?($failure['error_messages']??[]):[] as $error){
+                foreach(['error'=>'codes','parameter_name'=>'parameters'] as $field=>$target){$value=$error[$field]??'';if(is_string($value)&&preg_match('/^[A-Za-z0-9_.\\[\\]-]{1,100}$/D',$value)){if($target==='codes')$codes[]=$value;else $parameters[]=$value;}}
+            }
+            $diagnostic=['http_status'=>$status,'codes'=>array_slice($codes,0,10),'parameters'=>array_slice($parameters,0,10),'at'=>time()];
+            $file=$this->private.'/pagbank-diagnostic.json';file_put_contents($file,json_encode($diagnostic,JSON_THROW_ON_ERROR),LOCK_EX);chmod($file,0600);
+            error_log('PagBank: request failed HTTP '.$status);throw new RuntimeException('PagBank unavailable',$status);
+        }
+        @unlink($this->private.'/pagbank-diagnostic.json');
         $data=json_decode($response,true,64,JSON_THROW_ON_ERROR);
         if(!is_array($data))throw new RuntimeException('Invalid provider response');return $data;
     }
@@ -166,7 +176,14 @@ final class Payments {
                 $pay='';foreach($remote['links']??[] as $link)if(($link['rel']??'')==='PAY')$pay=$link['href']??'';
                 if(!self::safePayUrl($pay)||!preg_match('/^CHEC_[A-Za-z0-9-]+$/D',$remote['id']??''))throw new RuntimeException('Invalid payment link');
                 $this->app->query("UPDATE payment_orders SET checkout_id=?,pay_url=?,state=IF(state='CREATING','WAITING',state),updated=? WHERE reference_id=?",[$remote['id'],$pay,time(),$o['reference_id']]);
-            }catch(Throwable){$this->fail(503,'Não foi possível abrir o PagBank agora. Tente novamente ou fale com Luís Fernando.');}
+            }catch(Throwable $e){
+                $message=match($e->getCode()){
+                    401=>'O PagBank recusou a autenticação. O administrador precisa conferir se o token pertence ao ambiente selecionado.',
+                    403=>'O PagBank não autorizou este checkout. O administrador precisa conferir as permissões da conta.',
+                    400=>'O PagBank recusou os dados do checkout. Confira os dados informados; se persistir, fale com Luís Fernando.',
+                    default=>'Não foi possível abrir o PagBank agora. Tente novamente ou fale com Luís Fernando.',
+                };$this->fail(503,$message);
+            }
             $this->json(201,['url'=>$pay,'reference'=>$o['reference_id']]);
         }
         if($path==='/api/payments/status'&&$method==='POST'){
@@ -191,7 +208,10 @@ final class Payments {
     }
     public function adminRoute(string $path,string $method,array $data): never {
         if($path==='/api/admin/payments/settings'){
-            if($method==='GET')$this->json(200,['configured'=>strlen($this->settings['token']??'')>=20,'environment'=>$this->settings['environment'],'enabled'=>$this->ready()]);
+            if($method==='GET'){
+                $file=$this->private.'/pagbank-diagnostic.json';$diagnostic=is_file($file)?json_decode(file_get_contents($file),true):null;
+                $this->json(200,['configured'=>strlen($this->settings['token']??'')>=20,'environment'=>$this->settings['environment'],'enabled'=>$this->ready(),'diagnostic'=>$diagnostic]);
+            }
             if($method==='PUT'){
                 $env=$data['environment']??'';$token=$data['token']??'';$enabled=$data['enabled']??null;
                 if(!in_array($env,['sandbox','production'],true)||!is_string($token)||!is_bool($enabled)||strlen($token)>2048||str_contains($token,"\n")||str_contains($token,"\r"))$this->fail(400,'Configuração inválida.');
