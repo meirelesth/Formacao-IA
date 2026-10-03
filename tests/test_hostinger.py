@@ -87,20 +87,20 @@ class HostingerTests(unittest.TestCase):
         data['otp']=otp(self.secret);self.assertEqual(call('/api/login','POST',data)[0],200)
         self.assertEqual(call('/api/login','POST',data)[0],401)
     def test_11_invitation_and_single_use(self):
-        raw=self.invite();self.assertEqual(call('/api/activate','POST',{'token':raw,'password':'😀'*3})[0],400)
-        p={'token':raw,'password':'new-password-123456'}
+        raw=self.invite();self.assertEqual(call('/api/activate','POST',{'token':raw,'password':'12345'})[0],400)
+        p={'token':raw,'password':'Ab1!xy'}
         self.assertEqual(call('/api/activate','POST',p)[0],200);self.assertEqual(call('/api/activate','POST',p)[0],400)
-        c,_=self.login('new@example.com','new-password-123456');self.assertEqual([x['id'] for x in call('/catalogo.json',cookie=c)[2]['courses']],['basica'])
+        c,_=self.login('new@example.com','Ab1!xy');self.assertEqual([x['id'] for x in call('/catalogo.json',cookie=c)[2]['courses']],['basica'])
         self.assertNotIn(raw,[x['token_hash'] for x in json.loads(fixture('inspect'))['tokens']])
     def test_12_expired_invitation(self):
         raw=self.invite();fixture('expire-token');self.assertEqual(call('/api/activate','POST',{'token':raw,'password':'new-password-123456'})[0],400)
     def test_13_reset_revokes_existing_sessions(self):
         student,_=self.login();a,t=self.admin();rows=call('/api/admin/students',cookie=a)[2]['students'];uid=next(x['id'] for x in rows if x['email']=='a@example.com')
-        raw=call('/api/admin/reset-link','POST',{'id':uid,'csrf':t},a)[2]['link'].split('#')[1];data={'token':raw,'password':'changed-password-123456'}
+        raw=call('/api/admin/reset-link','POST',{'id':uid,'csrf':t},a)[2]['link'].split('#')[1];data={'token':raw,'password':'Cd2!yz'}
         self.assertEqual(call('/api/reset-password','POST',data)[0],200);self.assertEqual(call('/api/reset-password','POST',data)[0],400)
         self.assertEqual(call('/api/progress',cookie=student)[0],401)
         self.assertEqual(call('/api/login','POST',{'email':'a@example.com','password':'senha-local-123456'})[0],401)
-        self.login('a@example.com','changed-password-123456')
+        self.login('a@example.com','Cd2!yz')
     def test_14_suspension_revokes_sessions(self):
         student,_=self.login();a,t=self.admin();uid=next(x['id'] for x in call('/api/admin/students',cookie=a)[2]['students'] if x['email']=='a@example.com')
         self.assertEqual(call('/api/admin/student','PUT',{'id':uid,'active':False,'courses':['basica'],'csrf':t},a)[0],200)

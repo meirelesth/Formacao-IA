@@ -71,8 +71,8 @@ class Application(Access):
             db.close()
 
     def add_user(self, name, email, password):
-        if len(password) < 12 or len(password) > 256:
-            raise ValueError('A senha deve ter de 12 a 256 caracteres.')
+        if len(password) < 6 or len(password) > 256:
+            raise ValueError('A senha deve ter de 6 a 256 caracteres.')
         if not name.strip() or '@' not in email or len(email) > 254:
             raise ValueError('Nome e e-mail válidos são obrigatórios.')
         with self.connect() as db:
@@ -282,7 +282,7 @@ def main():
     args=parser.parse_args(); app=Application()
     if args.action in ('create-user','create-admin'):
         if not args.name or not args.email: parser.error('--name e --email são obrigatórios')
-        password=getpass.getpass('Senha (mínimo 12 caracteres): ')
+        password=getpass.getpass('Senha (mínimo 6 caracteres): ')
         if password != getpass.getpass('Confirme a senha: '): raise ValueError('As senhas são diferentes.')
         app.add_user(args.name,args.email,password)
         if args.action=='create-admin':

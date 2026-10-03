@@ -28,7 +28,7 @@ final class FormacaoApp {
     public static function validPassword(string $password): bool {
         if(strlen($password)>1024||str_contains($password,"\0"))return false;
         $characters=preg_match_all('/./us',$password);
-        return $characters!==false&&$characters>=12&&$characters<=256;
+        return $characters!==false&&$characters>=6&&$characters<=256;
     }
     public static function hashPassword(string $password): string {
         if (!self::validPassword($password)) throw new InvalidArgumentException('Invalid password');
@@ -170,7 +170,7 @@ final class FormacaoApp {
         if(in_array($path,['/api/activate','/api/reset-password'],true)&&$method==='POST'){
             if($this->limited('token-ip:'.$ip,20))$this->fail(429,'Muitas tentativas. Aguarde 15 minutos.');
             $raw=$data['token']??null;$password=$data['password']??null;
-            if(!is_string($raw)||strlen($raw)>128||!is_string($password)||!self::validPassword($password))$this->fail(400,'Use o link de acesso e uma senha de 12 a 256 caracteres.');
+            if(!is_string($raw)||strlen($raw)>128||!is_string($password)||!self::validPassword($password))$this->fail(400,'Use o link de acesso e uma senha de 6 a 256 caracteres.');
             $purpose=$path==='/api/activate'?'invite':'reset';$hash=self::hashPassword($password);$this->db->beginTransaction();
             $t=$this->query('SELECT * FROM access_tokens WHERE token_hash=? AND purpose=? AND used=0 AND expires>? FOR UPDATE',[hash('sha256',$raw),$purpose,time()])->fetch();
             if(!$t){$this->db->rollBack();$this->fail(400,'Link inválido ou expirado.');}

@@ -78,8 +78,8 @@ class Access:
         if path in ('/api/activate','/api/reset-password') and method=='POST':
             if self.limited('token:'+environ.get('REMOTE_ADDR',''),20): return respond('429 Too Many Requests',{'error':'Muitas tentativas. Aguarde 15 minutos.'})
             raw=data.get('token');password=data.get('password')
-            if not isinstance(raw,str) or len(raw)>128 or not isinstance(password,str) or not 12<=len(password)<=256:
-                return respond('400 Bad Request',{'error':'Informe o link de acesso e uma senha com pelo menos 12 caracteres.'})
+            if not isinstance(raw,str) or len(raw)>128 or not isinstance(password,str) or not 6<=len(password)<=256:
+                return respond('400 Bad Request',{'error':'Informe o link de acesso e uma senha com pelo menos 6 caracteres.'})
             purpose='invite' if path=='/api/activate' else 'reset'
             hashed=password_hash(password)
             with self.connect() as db:
