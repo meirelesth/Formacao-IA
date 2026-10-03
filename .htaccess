@@ -1,0 +1,13 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+RewriteEngine On
+# Keep server sources and development files inaccessible in direct Git deployments.
+RewriteRule ^(?:hostinger|server|tests|docs|\.github|\.git)(?:/|$) - [F,L,NC]
+<FilesMatch "(?i)\.(env|sql|sqlite3|bak|log|zip|ini)$">
+  Require all denied
+</FilesMatch>
+# Public site and standalone visitor form retain their existing entrypoints.
+RewriteRule ^lf-router\.php$ - [L]
+RewriteRule ^(?:api(?:/.*)?|healthz|instalar|catalogo\.json|admin\.html|aluno\.html)$ lf-router.php [END]
+RewriteRule ^materiais/Portfolio_Formacao_IA_VIP\.pdf$ - [L]
+RewriteRule ^materiais/ lf-router.php [END]
