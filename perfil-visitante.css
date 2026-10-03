@@ -28,7 +28,8 @@
 body.lf-profile-open{overflow:hidden}
 @media(max-width:480px){.lf-profile-header{padding:20px 20px 0}.lf-profile-content{padding:0 20px 20px}.lf-profile h2{font-size:25px}.lf-profile-options{grid-template-columns:1fr}.lf-profile-choice{padding:10px 12px}.lf-profile-actions{flex-wrap:wrap}}
 
-.lf-profile-expert{display:block;text-align:center;background:linear-gradient(90deg,#d8a958,#efc77b);color:#0f1a2b;border:1px solid #c69755;border-radius:14px;padding:16px 14px;margin-top:22px;text-decoration:none;box-shadow:0 4px 14px #0f1a2b12}
-.lf-profile-expert span{display:block;font-size:13px;margin-bottom:5px}
-.lf-profile-expert strong{display:block;font-size:15px;line-height:1.4}
-.lf-profile-expert:hover{filter:brightness(1.04)}
+.lf-profile-expert{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;min-height:112px;text-align:center;background:linear-gradient(100deg,#d8a958,#efc77b);color:#0f1a2b;border:2px solid #bb8840;border-radius:18px;padding:24px 18px;margin-top:28px;text-decoration:none;box-shadow:0 8px 24px #0f1a2b26}
+.lf-profile-expert span{display:block;font-size:15px;font-weight:600;line-height:1.4}
+.lf-profile-expert strong{display:block;font-size:22px;font-weight:800;line-height:1.25;max-width:480px}
+.lf-profile-expert:hover{filter:brightness(1.04);box-shadow:0 10px 28px #0f1a2b30}
+@media(max-width:480px){.lf-profile-expert{min-height:120px;padding:22px 16px;border-radius:16px}.lf-profile-expert strong{font-size:20px}.lf-profile-expert span{font-size:14px}}
