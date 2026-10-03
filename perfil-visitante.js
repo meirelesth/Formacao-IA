@@ -1,4 +1,4 @@
-/* Optional visitor questionnaire. No automatic opening before delivery is configured. */
+/* Optional visitor questionnaire, stored in the website database; email is separate. */
 (() => {
  'use strict';
  const dismissedKey='lf-profile-dismissed-v1',answeredKey='lf-profile-answered-v1';
@@ -27,7 +27,7 @@
   const bytes=new Uint8Array(16);if(!requestId){crypto.getRandomValues(bytes);requestId=[...bytes].map(b=>b.toString(16).padStart(2,'0')).join('');}
   busy=true;send.disabled=true;send.textContent='Enviando…';status.textContent='';
   try{
-   const response=await fetch('api/visitor-profile',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId,motivation:f.get('motivation'),occupation:f.get('occupation'),profession:f.get('profession').trim(),ai:f.get('ai'),interests:f.getAll('interests'),dream:f.get('dream').trim(),website:f.get('website')})});
+   const response=await fetch('perfil-visitante.php',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId,motivation:f.get('motivation'),occupation:f.get('occupation'),profession:f.get('profession').trim(),ai:f.get('ai'),interests:f.getAll('interests'),dream:f.get('dream').trim(),website:f.get('website')})});
    let result;try{result=await response.json();}catch{throw new Error('Não foi possível enviar agora. Suas respostas continuam aqui; tente novamente.');}
    if(!response.ok||!result.ok)throw new Error(result.error||'Não foi possível enviar. Tente novamente.');
    write(localStorage,answeredKey,'1');form.hidden=true;dialog.querySelector('.lf-profile-success').hidden=false;dialog.querySelector('[data-done]').focus();
@@ -36,7 +36,7 @@
  });
  async function init(){
   try{
-   const response=await fetch('api/visitor-profile/config',{credentials:'same-origin',headers:{Accept:'application/json'}});
+   const response=await fetch('perfil-visitante.php?config=1',{credentials:'same-origin',headers:{Accept:'application/json'}});
    if(!response.ok)return;const config=await response.json();enabled=config.enabled===true;if(!enabled)return;
    const footer=document.querySelector('footer');if(footer){const reopen=document.createElement('button');reopen.type='button';reopen.className='lf-profile-reopen';reopen.textContent='Conte o que você quer aprender com IA';reopen.onclick=open;footer.append(document.createElement('br'),reopen);}
    if(!read(sessionStorage,dismissedKey)&&!read(localStorage,answeredKey))setTimeout(()=>{if(!document.querySelector('dialog[open]'))open();},1200);

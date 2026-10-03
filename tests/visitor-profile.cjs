@@ -6,8 +6,8 @@ const fs=require('node:fs');fs.mkdirSync('browser-results',{recursive:true});
  for(const width of [360,390,768,1440]){
   const context=await b.newContext({viewport:{width,height:900}});
   const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));let ready=true,fail=false,payloads=[];
-  await p.route('**/api/visitor-profile/config',r=>r.fulfill({json:{enabled:ready}}));
-  await p.route('**/api/visitor-profile',r=>{payloads.push(r.request().postDataJSON());return r.fulfill({status:fail?503:202,json:fail?{error:'Teste de falha: tente novamente.'}:{ok:true}})});
+  await p.route('**/perfil-visitante.php?config=1',r=>r.fulfill({json:{enabled:ready}}));
+  await p.route('**/perfil-visitante.php',r=>{payloads.push(r.request().postDataJSON());return r.fulfill({status:fail?503:202,json:fail?{error:'Teste de falha: tente novamente.'}:{ok:true}})});
   await p.goto('http://127.0.0.1:8080/index.html');
   assert((await p.title()).includes('Luís Fernando'));
   await p.locator('#visitor-profile').waitFor({state:'visible'});
@@ -36,7 +36,7 @@ const fs=require('node:fs');fs.mkdirSync('browser-results',{recursive:true});
   assert.deepEqual(errors,[]);checks++;await context.close();
  }
  const ctx=await b.newContext();const page=await ctx.newPage();
- await page.route('**/api/visitor-profile/config',r=>r.fulfill({json:{enabled:false}}));
+ await page.route('**/perfil-visitante.php?config=1',r=>r.fulfill({json:{enabled:false}}));
  await page.goto('http://127.0.0.1:8080/index.html');await page.waitForTimeout(1600);
  assert(!(await page.locator('#visitor-profile').isVisible()));assert.equal(await page.locator('.lf-profile-reopen').count(),0);checks+=2;
  await b.close();console.log(checks+' verificações passaram: abertura, fechamento, sessão, reabertura, validação, falha/retry, idempotência, sucesso e configuração desativada. Larguras: 360, 390, 768 e 1440. Browser plugin not available; Playwright usado.');

@@ -6,7 +6,7 @@ parser=argparse.ArgumentParser();parser.add_argument('--output',required=True);a
 output=Path(args.output).resolve();output.mkdir(parents=True,exist_ok=True)
 public=output/'public_html';private=output/'formacao-private'
 public.mkdir(exist_ok=True);private.mkdir(exist_ok=True)
-names=['perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','aluno.html','admin.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','aluno.js','entrar.js','acesso.js','admin.js','certificado.js','favicon.ico']
+names=['perfil-visitante-lib.php','respostas-visitantes.html','respostas-visitantes.css','respostas-visitantes.js','perfil-visitante.php','perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','aluno.html','admin.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','aluno.js','entrar.js','acesso.js','admin.js','certificado.js','favicon.ico']
 for name in names:shutil.copy2(ROOT/name,public/name)
 shutil.copytree(ROOT/'assets',public/'assets',dirs_exist_ok=True)
 (public/'materiais').mkdir(exist_ok=True);shutil.copy2(ROOT/'materiais/Portfolio_Formacao_IA_VIP.pdf',public/'materiais/Portfolio_Formacao_IA_VIP.pdf')

@@ -208,7 +208,7 @@ final class FormacaoApp {
             if(!$session)$this->fail(401,'Entre para acessar o material.');$catalog=$this->catalog($session);$allowed=array_column($catalog['materials'],'path');foreach($catalog['courses'] as $c)foreach($c['modules'] as $m)foreach($m['lessons'] as $l)$allowed[]=$l['material']??'';
             if(!in_array($relative,$allowed,true))$this->fail(403,'Material não incluído na sua matrícula.');$root=$this->private;
         }else{
-            $names=['perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
+            $names=['respostas-visitantes.html','respostas-visitantes.css','respostas-visitantes.js','perfil-visitante.css','perfil-visitante.js','index.html','entrar.html','ativar.html','redefinir.html','admin.html','aluno.html','planos.html','styles.css','portfolio.css','planos.css','login.css','aluno.css','certificado.css','app.js','entrar.js','acesso.js','admin.js','aluno.js','certificado.js','favicon.ico','materiais/Portfolio_Formacao_IA_VIP.pdf'];
             if(!in_array($relative,$names,true)&&!(str_starts_with($relative,'assets/')&&in_array(strtolower(pathinfo($relative,PATHINFO_EXTENSION)),['svg','png','jpg','jpeg','ico'],true)))$this->fail(404,'Página não encontrada.');
         }
         $target=realpath($root.'/'.$relative);$base=realpath($root);
