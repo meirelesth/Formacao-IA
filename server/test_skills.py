@@ -37,7 +37,7 @@ class SkillsTests(unittest.TestCase):
         skills=self.request('/api/skills',cookie=student)['body']['skills']
         self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
         packages=[s for s in skills if s['download_url'].startswith('/api/skills/')]
-        self.assertEqual(len(packages),126)
+        self.assertEqual(len(packages),131)
         target=next(s for s in packages if s['title']=='Documentos do Word (DOCX)')
         url=target['download_url']
         self.assertEqual(self.request(url)['status'],401)
@@ -59,7 +59,7 @@ class SkillsTests(unittest.TestCase):
         packages=json.loads((Path(__file__).parent/'skills-packages.json').read_text())
         pattern=re.compile(r'jacar[eé]|jhc',re.I)
         self.assertEqual(len(source['excluded_skill_ids']),15)
-        self.assertEqual(len(source['skills']),1298)
+        self.assertEqual(len(source['skills']),1303)
         self.assertFalse(pattern.search(json.dumps(source['skills'],ensure_ascii=False)))
         for package in packages.values():
             with zipfile.ZipFile(io.BytesIO(base64.b64decode(package['base64']))) as archive:
@@ -76,11 +76,11 @@ class SkillsTests(unittest.TestCase):
                     [id,'Retirada','Dados','Conteúdo anterior','1.0','claude-code',f'/api/skills/{id}/download','','',1,1])
         with self.app.connect() as db:db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
         visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
-        self.assertEqual(len(visible),1298)
+        self.assertEqual(len(visible),1303)
         for id in source['excluded_skill_ids']:
             self.assertEqual(self.request(f'/api/skills/{id}/download',cookie=student)['status'],404)
 
-    def test_ptbr_packages_and_existing_catalog_migration(self):
+    def test_ptbr_packages_and_existing_admin_edits_preserved(self):
         import base64, io, json, re, zipfile
         from pathlib import Path
         source=json.loads((Path(__file__).parent/'skills-catalog.json').read_text())
@@ -103,14 +103,33 @@ class SkillsTests(unittest.TestCase):
         self.request('/api/skills',cookie=student)
         target=next(s for s in source['skills'] if s['title']=='Agentes de IA no n8n')
         with self.app.connect() as db:
-            db.execute('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['n8n-n8n-agents','Design n8n AI agents the right way.',target['id']])
+            db.execute('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['Minha skill n8n','Minha descrição personalizada.',target['id']])
             db.execute('DELETE FROM skills_imports WHERE version=?',(source['import_version'],))
             db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
         visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
         migrated=next(s for s in visible if s['id']==target['id'])
-        self.assertEqual(migrated['title'],target['title'])
-        self.assertEqual(migrated['description'],target['description'])
+        self.assertEqual(migrated['title'],'Minha skill n8n')
+        self.assertEqual(migrated['description'],'Minha descrição personalizada.')
         self.assertFalse(migrated['published'])
         with self.app.connect() as db:db.execute('UPDATE skills SET title=? WHERE id=?',['Minha edição em português',target['id']])
         visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
         self.assertEqual(next(s for s in visible if s['id']==target['id'])['title'],'Minha edição em português')
+
+    def test_featured_skills_downloads_and_dependencies(self):
+        import io, zipfile
+        student,_=self.login()
+        rows={s['id']:s for s in self.request('/api/skills',cookie=student)['body']['skills']}
+        expected={3000000:('find-skills',),3000001:('agent-browser','agent-browser-core'),3000002:('react-best-practices',),3000003:('grill-me','grilling'),3000004:('hyperframes',)}
+        for id,roots in expected.items():
+            row=rows[id]
+            self.assertTrue(row['published'])
+            self.assertTrue(row['source_url'].startswith('https://github.com/'))
+            self.assertEqual(self.request(row['download_url'])['status'],401)
+            download=self.request(row['download_url'],cookie=student)
+            self.assertEqual(download['status'],200)
+            with zipfile.ZipFile(io.BytesIO(download['body'])) as z:
+                for root in roots:
+                    text=z.read(root+'/SKILL.md').decode()
+                    self.assertIn('Responda sempre em português do Brasil.',text)
+                    self.assertIn(root+'/agents/openai.yaml',z.namelist())
+                self.assertIn(roots[0]+'/ORIGEM.txt',z.namelist())

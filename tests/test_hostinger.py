@@ -182,16 +182,16 @@ class HostingerTests(unittest.TestCase):
             a,_=self.login()
             status,_,body=call('/api/skills',cookie=a)
             self.assertEqual(status,200)
-            self.assertEqual(len(body['skills']),1298)
-            self.assertEqual(sum(bool(s['download_url']) for s in body['skills']),126)
+            self.assertEqual(len(body['skills']),1303)
+            self.assertEqual(sum(bool(s['download_url']) for s in body['skills']),131)
             target=next(s for s in body['skills'] if s['title']=='Documentos do Word (DOCX)')
             self.assertEqual(call(target['download_url'])[0],401)
             self.assertTrue(call(target['download_url'],cookie=a)[2].startswith('PK'))
-            self.assertEqual(len(call('/api/skills',cookie=a)[2]['skills']),1298)
+            self.assertEqual(len(call('/api/skills',cookie=a)[2]['skills']),1303)
             for name in ['skills-catalog.json','skills-packages.json']:
                 self.assertIn(call('/server/'+name)[0],[403,404])
             c,_=self.admin()
-            self.assertEqual(len(call('/api/admin/skills',cookie=c)[2]['skills']),1298)
+            self.assertEqual(len(call('/api/admin/skills',cookie=c)[2]['skills']),1303)
             self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
         finally:
             fixture('restore-skills-layout')
@@ -200,7 +200,7 @@ class HostingerTests(unittest.TestCase):
         a,t=self.login()
         skills=call('/api/skills',cookie=a)[2]['skills']
         self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
-        self.assertEqual(sum(s['download_url'].startswith('/api/skills/') for s in skills),126)
+        self.assertEqual(sum(s['download_url'].startswith('/api/skills/') for s in skills),131)
         target=next(s for s in skills if s['title']=='Documentos do Word (DOCX)')
         self.assertEqual(call(target['download_url'])[0],401)
         download=call(target['download_url'],cookie=a)
@@ -213,20 +213,33 @@ class HostingerTests(unittest.TestCase):
         self.assertFalse(any(s['id']==target['id'] for s in call('/api/skills',cookie=a)[2]['skills']))
         self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
 
-    def test_central_ptbr_migration_preserves_publication(self):
+    def test_central_additions_preserve_admin_edits(self):
         a,_=self.login()
         call('/api/skills',cookie=a)
         original=json.loads(fixture('seed-legacy-localization'))
         c,csrf=self.admin()
         rows=call('/api/admin/skills',cookie=c)[2]['skills']
         migrated=next(s for s in rows if s['id']==original['id'])
-        self.assertEqual(migrated['title'],original['title'])
-        self.assertEqual(migrated['description'],original['description'])
+        self.assertEqual(migrated['title'],'Minha skill n8n')
+        self.assertEqual(migrated['description'],'Minha descrição personalizada.')
         self.assertFalse(migrated['published'])
         changed={**migrated,'title':'Minha edição em português','csrf':csrf}
         self.assertEqual(call('/api/admin/skills','PUT',changed,c)[0],200)
         rows=call('/api/admin/skills',cookie=c)[2]['skills']
         self.assertEqual(next(s for s in rows if s['id']==original['id'])['title'],changed['title'])
+        self.assertEqual(call('/api/admin/skills','PUT',{**original,'csrf':csrf},c)[0],200)
+
+    def test_featured_skills_authenticated_downloads(self):
+        a,_=self.login()
+        rows={s['id']:s for s in call('/api/skills',cookie=a)[2]['skills']}
+        for id in range(3000000,3000005):
+            row=rows[id]
+            self.assertTrue(row['source_url'].startswith('https://github.com/'))
+            self.assertEqual(call(row['download_url'])[0],401)
+            status,headers,body=call(row['download_url'],cookie=a)
+            self.assertEqual(status,200)
+            self.assertTrue(body.startswith('PK'))
+            self.assertIn('-ptbr.zip',headers['Content-Disposition'])
 
     def test_30_payment_access_and_duplicate_notifications(self):
         fixture('seed-payments')

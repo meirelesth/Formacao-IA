@@ -18,12 +18,20 @@ Na implantação automática do repositório pelo GitHub, o PHP lê o acervo atu
 
 Publicar HTML pelo GitHub não ativa sozinho PHP/MySQL. Para confirmar a implantação, /api/session precisa responder JSON e /healthz precisa responder ok. Um 404 nessas rotas indica que a área privada ainda não está operando nesse domínio.
 
-Em 04/10/2026, 15 skills relacionadas a conteúdo empresarial foram retiradas do catálogo, dos pacotes individuais e do ZIP completo. A lista de IDs excluídos também remove os registros importados anteriormente, preservando as demais skills. O acervo disponível contém 1.298 entradas.
+Em 04/10/2026, 15 skills relacionadas a conteúdo empresarial foram retiradas do catálogo, dos pacotes individuais e do ZIP completo. A lista de IDs excluídos também remove os registros importados anteriormente, preservando as demais skills. Após essa retirada, o acervo continha 1.298 entradas.
 
 ## Português do Brasil
 
-Os títulos e descrições do catálogo e os textos dos 126 pacotes são adaptados para PT-BR. Cada SKILL.md contém uma instrução explícita para produzir respostas e materiais em português do Brasil, com interface agents/openai.yaml também em português. Identificadores técnicos, comandos, exemplos de código e arquivos executáveis mantêm sua função e seus nomes. A importação da versão localizada atualiza títulos e descrições dos registros existentes uma única vez, sem alterar a publicação, links de download ou comandos definidos pelo professor.
+Os títulos e descrições do catálogo e os textos dos pacotes são adaptados para PT-BR. Cada SKILL.md contém uma instrução explícita para produzir respostas e materiais em português do Brasil, com interface agents/openai.yaml também em português. Identificadores técnicos, comandos, exemplos de código e arquivos executáveis mantêm sua função e seus nomes. A importação da versão localizada atualiza títulos e descrições dos registros existentes uma única vez, sem alterar a publicação, links de download ou comandos definidos pelo professor.
 
 As entradas de catálogo com fonte externa não contêm um pacote hospedado nesta plataforma. O prompt orienta traduzir a documentação e as instruções para PT-BR antes da instalação, preservando o código e os requisitos. A instalação depende do agente e do acesso à fonte.
 
 A tradução em lote utiliza OPUS-MT (Helsinki-NLP), com revisão de termos e proteção dos trechos técnicos. Referência do modelo: https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt .
+
+## Seleção de skills em destaque
+
+A biblioteca inclui pacotes em PT-BR de Encontrar skills (Vercel), Automação de navegador (Vercel), Boas práticas de React e Next.js (Vercel), Entrevista para validar ideias (Matt Pocock) e Vídeos e animações com Hyperframes (HeyGen). Design de interfaces, Criação de skills e Planilhas do Excel já estão disponíveis no acervo da Anthropic.
+
+Cada novo pacote registra a fonte e sua revisão em ORIGEM.txt e preserva as licenças presentes na origem. A entrevista inclui sua dependência grilling; a automação inclui o guia core com referências e modelos. Hyperframes inclui o ponto de entrada e suas referências; os fluxos adicionais e o CLI são obtidos sob demanda conforme as instruções da fonte. Conteúdos buscados externamente também devem ser traduzidos para PT-BR antes do uso. Adicionar os pacotes não instala ferramentas no computador do aluno.
+
+Esta importação acrescenta cinco registros, totalizando 1.303 entradas e 131 pacotes. Ela preserva títulos, descrições e publicação editados anteriormente pelo administrador.

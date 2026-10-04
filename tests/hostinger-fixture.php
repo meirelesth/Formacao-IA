@@ -16,7 +16,7 @@ if($mode==='reset'){
 }elseif($mode==='seed-legacy-localization'){
     $source=json_decode(file_get_contents('/var/www/formacao-private/skills-catalog.json'),true,512,JSON_THROW_ON_ERROR);
     foreach($source['skills'] as $row)if($row['title']==='Agentes de IA no n8n'){
-        $app->query('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['n8n-n8n-agents','Design n8n AI agents the right way.',$row['id']]);
+        $app->query('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['Minha skill n8n','Minha descrição personalizada.',$row['id']]);
         $app->query('DELETE FROM skills_imports WHERE version=?',[$source['import_version']]);
         echo json_encode($row);break;
     }
