@@ -229,6 +229,9 @@ final class FormacaoApp {
         $file=$this->skillAsset('skills-catalog.json');
         if(!is_file($file))throw new RuntimeException('Skills catalog unavailable');
         $source=json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR);
+        // Apply withdrawals even when this catalog version was imported previously.
+        $excluded=array_values(array_filter($source['excluded_skill_ids']??[],fn($id)=>is_int($id)&&$id>0));
+        if($excluded)$this->query('DELETE FROM skills WHERE id IN ('.implode(',',array_fill(0,count($excluded),'?')).')',$excluded);
         $this->db->exec("CREATE TABLE IF NOT EXISTS skills_imports(version VARCHAR(80) PRIMARY KEY) ENGINE=InnoDB");
         if($this->query('SELECT version FROM skills_imports WHERE version=?',[$source['import_version']])->fetch())return;
         $this->db->beginTransaction();
@@ -298,4 +301,3 @@ final class FormacaoApp {
         $this->fail(404,'Recurso não encontrado.');
     }
 }
-

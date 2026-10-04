@@ -13,6 +13,10 @@ if($mode==='reset'){
     foreach(['sessions','progress','access_tokens','limits','mail_jobs','audit'] as $table)$app->query('DELETE FROM '.$table);
     $app->query("DELETE FROM users WHERE role='student'");$app->query('UPDATE users SET otp_step=-1');
     foreach([['Aluno A','a@example.com','senha-local-123456','basica'],['Aluno B','b@example.com','senha-local-654321','avancada']] as [$name,$email,$pass,$course])$app->query('INSERT INTO users(name,email,password,courses,created) VALUES(?,?,?,?,?)',[$name,$email,FormacaoApp::hashPassword($pass),json_encode([$course]),time()]);
+}elseif($mode==='seed-retired-skills'){
+    $source=json_decode(file_get_contents('/var/www/formacao-private/skills-catalog.json'),true,512,JSON_THROW_ON_ERROR);
+    foreach($source['excluded_skill_ids'] as $id)$app->query('INSERT INTO skills(id,title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',[$id,'Retirada','Dados','Conteúdo anterior','1.0','claude-code','/api/skills/'.$id.'/download','','',1,1]);
+    echo json_encode($source['excluded_skill_ids']);
 }elseif($mode==='git-skills-layout'){
     mkdir('/var/www/html/server',0755,true);
     foreach(['skills-catalog.json','skills-packages.json'] as $name){

@@ -37,7 +37,7 @@ class SkillsTests(unittest.TestCase):
         skills=self.request('/api/skills',cookie=student)['body']['skills']
         self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
         packages=[s for s in skills if s['download_url'].startswith('/api/skills/')]
-        self.assertEqual(len(packages),141)
+        self.assertEqual(len(packages),126)
         target=next(s for s in packages if s['title']=='docx')
         url=target['download_url']
         self.assertEqual(self.request(url)['status'],401)
@@ -45,12 +45,37 @@ class SkillsTests(unittest.TestCase):
         self.assertEqual(download['status'],200)
         archive=zipfile.ZipFile(io.BytesIO(download['body']))
         self.assertIn('docx/SKILL.md',archive.namelist())
-        finance=next(s for s in packages if s['title']=='fin-relatorio-cfo')
-        finance_zip=zipfile.ZipFile(io.BytesIO(self.request(finance['download_url'],cookie=student)['body']))
-        self.assertTrue(any(n.startswith('_fin-shared/') for n in finance_zip.namelist()))
         self.assertEqual(self.request('/api/skills/bundle/download',cookie=student)['status'],403)
         with self.app.connect() as db: db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
         self.assertEqual(self.request('/api/admin/skills','PUT',{**target,'csrf':token,'published':False},student)['status'],200)
         self.assertEqual(self.request(url,cookie=student)['status'],404)
         self.assertFalse(any(s['id']==target['id'] for s in self.request('/api/skills',cookie=student)['body']['skills']))
         self.assertEqual(self.request('/api/skills/bundle/download',cookie=student)['status'],200)
+
+    def test_company_skills_removed_from_existing_database_and_archives(self):
+        import base64, io, json, re, zipfile
+        from pathlib import Path
+        source=json.loads((Path(__file__).parent/'skills-catalog.json').read_text())
+        packages=json.loads((Path(__file__).parent/'skills-packages.json').read_text())
+        pattern=re.compile(r'jacar[eé]|jhc',re.I)
+        self.assertEqual(len(source['excluded_skill_ids']),15)
+        self.assertEqual(len(source['skills']),1298)
+        self.assertFalse(pattern.search(json.dumps(source['skills'],ensure_ascii=False)))
+        for package in packages.values():
+            with zipfile.ZipFile(io.BytesIO(base64.b64decode(package['base64']))) as archive:
+                for name in archive.namelist():
+                    if not name.endswith('/'):
+                        self.assertFalse(pattern.search(name),name)
+                        self.assertFalse(pattern.search(archive.read(name).decode('utf8',errors='ignore')),name)
+        student,_=self.login()
+        self.request('/api/skills',cookie=student)
+        # Simulate a production DB that already imported the catalog but retained older company rows.
+        with self.app.connect() as db:
+            for id in source['excluded_skill_ids']:
+                db.execute('INSERT INTO skills(id,title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                    [id,'Retirada','Dados','Conteúdo anterior','1.0','claude-code',f'/api/skills/{id}/download','','',1,1])
+        with self.app.connect() as db:db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
+        visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
+        self.assertEqual(len(visible),1298)
+        for id in source['excluded_skill_ids']:
+            self.assertEqual(self.request(f'/api/skills/{id}/download',cookie=student)['status'],404)

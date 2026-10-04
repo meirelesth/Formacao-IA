@@ -1,6 +1,6 @@
 # Central de Skills integrada
 
-Acervo importado da pasta Central de Skills do professor: 1.172 entradas do catálogo em 90 categorias e 141 pacotes com SKILL.md. O catálogo conserva os links de origem. As entradas de catálogo não representam pacotes testados ou compatibilidade garantida com Claude web.
+Acervo importado da pasta Central de Skills do professor: 1.172 entradas do catálogo em 90 categorias e 126 pacotes com SKILL.md. O catálogo conserva os links de origem. As entradas de catálogo não representam pacotes testados ou compatibilidade garantida com Claude web.
 
 Os pacotes conservam scripts, referências, exemplos e dependências compartilhadas presentes no acervo. Os pacotes técnicos podem exigir Claude Code, MCP, terminal e outros serviços. Os arquivos são fornecidos para download e nunca executados pelo site.
 
@@ -17,3 +17,5 @@ O pacote Hostinger inclui skills-catalog.json, skills-packages.json e CENTRAL-LI
 Na implantação automática do repositório pelo GitHub, o PHP lê o acervo atualizado de server/ dentro do projeto, protegido pelo bloqueio HTTP do .htaccess. Na instalação por ZIP, usa formacao-private. Ambos importam o catálogo no primeiro acesso autenticado e mantêm os downloads protegidos, sem exigir a cópia manual dos arquivos para a pasta privada.
 
 Publicar HTML pelo GitHub não ativa sozinho PHP/MySQL. Para confirmar a implantação, /api/session precisa responder JSON e /healthz precisa responder ok. Um 404 nessas rotas indica que a área privada ainda não está operando nesse domínio.
+
+Em 04/10/2026, 15 skills relacionadas a conteúdo empresarial foram retiradas do catálogo, dos pacotes individuais e do ZIP completo. A lista de IDs excluídos também remove os registros importados anteriormente, preservando as demais skills. O acervo disponível contém 1.298 entradas.

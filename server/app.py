@@ -103,6 +103,9 @@ class Application(Access):
         if not catalog.exists(): return
         source=json.loads(catalog.read_text())
         with self.connect() as db:
+            excluded=[id for id in source.get('excluded_skill_ids',[]) if type(id) is int and id>0]
+            if excluded:
+                db.execute('DELETE FROM skills WHERE id IN ('+','.join('?' for id in excluded)+')',excluded)
             db.execute('CREATE TABLE IF NOT EXISTS skills_imports(version TEXT PRIMARY KEY)')
             if db.execute('SELECT 1 FROM skills_imports WHERE version=?',(source['import_version'],)).fetchone(): return
             fields=('id','title','category','description','version','platform','download_url','source_url','install_command','published','updated')
@@ -299,6 +302,5 @@ def main():
         with make_server('127.0.0.1',args.port,app) as httpd: httpd.serve_forever()
 
 if __name__=='__main__': main()
-
 
 
