@@ -219,8 +219,15 @@ final class FormacaoApp {
         $ext=strtolower(pathinfo($target,PATHINFO_EXTENSION));$types=['html'=>'text/html','css'=>'text/css','js'=>'text/javascript','png'=>'image/png','svg'=>'image/svg+xml','jpg'=>'image/jpeg','jpeg'=>'image/jpeg','ico'=>'image/x-icon','pdf'=>'application/pdf','md'=>'text/plain'];
         header('Content-Type: '.($types[$ext]??'application/octet-stream').(in_array($ext,['html','css','js','md'],true)?'; charset=utf-8':''));header('Content-Length: '.filesize($target));readfile($target);exit;
     }
+    private function skillAsset(string $name): string {
+        // Direct Git deployments update server/, while ZIP installations use the private directory.
+        // Neither location is served over HTTP; downloads still require an authorized session.
+        $repositoryFile=$this->public.'/server/'.$name;
+        return is_file($repositoryFile)?$repositoryFile:$this->private.'/'.$name;
+    }
     private function importSkills(): void {
-        $file=$this->private.'/skills-catalog.json';if(!is_file($file))return;
+        $file=$this->skillAsset('skills-catalog.json');
+        if(!is_file($file))throw new RuntimeException('Skills catalog unavailable');
         $source=json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR);
         $this->db->exec("CREATE TABLE IF NOT EXISTS skills_imports(version VARCHAR(80) PRIMARY KEY) ENGINE=InnoDB");
         if($this->query('SELECT version FROM skills_imports WHERE version=?',[$source['import_version']])->fetch())return;
@@ -236,7 +243,7 @@ final class FormacaoApp {
         if($method!=='GET')$this->fail(405,'Método não permitido.');
         if($key==='bundle'&&$session['role']!=='admin')$this->fail(403,'Pacote completo exclusivo da administração.');
         if($key!=='bundle'&&!$this->query('SELECT id FROM skills WHERE id=? AND published=1',[(int)$key])->fetch())$this->fail(404,'Pacote indisponível.');
-        $file=$this->private.'/skills-packages.json';$packages=is_file($file)?json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR):[];
+        $file=$this->skillAsset('skills-packages.json');$packages=is_file($file)?json_decode(file_get_contents($file),true,512,JSON_THROW_ON_ERROR):[];
         $package=$packages[$key]??null;if(!$package)$this->fail(404,'Pacote indisponível.');
         $bytes=base64_decode($package['base64'],true);if($bytes===false)$this->fail(500,'Pacote inválido.');
         header('Content-Type: application/zip');header('Content-Disposition: attachment; filename="'.$package['name'].'"');header('Content-Length: '.strlen($bytes));echo $bytes;exit;
@@ -291,5 +298,4 @@ final class FormacaoApp {
         $this->fail(404,'Recurso não encontrado.');
     }
 }
-
 

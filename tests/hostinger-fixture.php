@@ -13,6 +13,20 @@ if($mode==='reset'){
     foreach(['sessions','progress','access_tokens','limits','mail_jobs','audit'] as $table)$app->query('DELETE FROM '.$table);
     $app->query("DELETE FROM users WHERE role='student'");$app->query('UPDATE users SET otp_step=-1');
     foreach([['Aluno A','a@example.com','senha-local-123456','basica'],['Aluno B','b@example.com','senha-local-654321','avancada']] as [$name,$email,$pass,$course])$app->query('INSERT INTO users(name,email,password,courses,created) VALUES(?,?,?,?,?)',[$name,$email,FormacaoApp::hashPassword($pass),json_encode([$course]),time()]);
+}elseif($mode==='git-skills-layout'){
+    mkdir('/var/www/html/server',0755,true);
+    foreach(['skills-catalog.json','skills-packages.json'] as $name){
+        copy('/tmp/git-skills-source/'.$name,'/var/www/html/server/'.$name);
+        rename('/var/www/formacao-private/'.$name,'/var/www/formacao-private/'.$name.'.fixture');
+    }
+    $app->db->exec('DROP TABLE IF EXISTS skills_imports');
+    $app->db->exec('DELETE FROM skills');
+}elseif($mode==='restore-skills-layout'){
+    foreach(['skills-catalog.json','skills-packages.json'] as $name){
+        unlink('/var/www/html/server/'.$name);
+        rename('/var/www/formacao-private/'.$name.'.fixture','/var/www/formacao-private/'.$name);
+    }
+    rmdir('/var/www/html/server');
 }elseif($mode==='seed-payments'){
     foreach([['1','newpay@example.com','basica','PAID','production'],['2','newpay@example.com','avancada','PAID','production'],['3','testpay@example.com','basica','PAID','sandbox'],['4','waiting@example.com','basica','WAITING','production'],['5','a@example.com','avancada','PAID','production'],['6','admin-test@example.com','admin_test','PAID','production']] as [$digit,$email,$course,$state,$env]){
         $app->query('INSERT INTO payment_orders(reference_id,buyer_hash,course,amount,name,email,environment,state,created,updated) VALUES(?,?,?,?,?,?,?,?,?,?)',[str_repeat($digit,32),hash('sha256',str_repeat($digit,64)),$course,$course==='admin_test'?100:Payments::PRODUCTS[$course]['amount'],'Payment Student',$email,$env,$state,time(),time()]);

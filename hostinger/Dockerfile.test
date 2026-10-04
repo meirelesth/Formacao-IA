@@ -3,5 +3,6 @@ RUN docker-php-ext-install pdo_mysql && a2enmod rewrite && sed -i 's/Listen 80/L
 COPY build/hostinger/public_html/ /var/www/html/
 COPY build/hostinger/formacao-private/ /var/www/formacao-private/
 COPY tests/hostinger-fixture.php /tmp/hostinger-fixture.php
+COPY server/skills-catalog.json server/skills-packages.json /tmp/git-skills-source/
 RUN chown -R www-data:www-data /var/www/formacao-private
 CMD ["sh", "-c", "php /tmp/hostinger-fixture.php configure && apache2-foreground"]

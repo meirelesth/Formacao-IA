@@ -163,6 +163,26 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call('/api/admin/skills','PUT',{**update,'published':False},c)[0],200)
         self.assertNotIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
 
+    def test_central_git_deployment_import(self):
+        fixture('git-skills-layout')
+        try:
+            a,_=self.login()
+            status,_,body=call('/api/skills',cookie=a)
+            self.assertEqual(status,200)
+            self.assertEqual(len(body['skills']),1313)
+            self.assertEqual(sum(bool(s['download_url']) for s in body['skills']),141)
+            target=next(s for s in body['skills'] if s['title']=='docx')
+            self.assertEqual(call(target['download_url'])[0],401)
+            self.assertTrue(call(target['download_url'],cookie=a)[2].startswith('PK'))
+            self.assertEqual(len(call('/api/skills',cookie=a)[2]['skills']),1313)
+            for name in ['skills-catalog.json','skills-packages.json']:
+                self.assertIn(call('/server/'+name)[0],[403,404])
+            c,_=self.admin()
+            self.assertEqual(len(call('/api/admin/skills',cookie=c)[2]['skills']),1313)
+            self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
+        finally:
+            fixture('restore-skills-layout')
+
     def test_central_import_and_packages(self):
         a,t=self.login()
         skills=call('/api/skills',cookie=a)[2]['skills']
@@ -229,4 +249,3 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call('/api/admin/payments/settings','PUT',{'environment':'production','token':'fixture-only-token','enabled':False,'csrf':'wrong'},c)[0],403)
 
 if __name__=='__main__':unittest.main(verbosity=2)
-

@@ -14,4 +14,6 @@ O backend importa os registros uma única vez, ao primeiro acesso autorizado à 
 
 O pacote Hostinger inclui skills-catalog.json, skills-packages.json e CENTRAL-LICENSE.txt em formacao-private, fora de public_html. O backend Python usa os mesmos dados em server, cujo acesso HTTP é bloqueado. Os arquivos de configuração e credenciais não fazem parte do pacote. A instalação segue docs/HOSTINGER.md.
 
+Na implantação automática do repositório pelo GitHub, o PHP lê o acervo atualizado de server/ dentro do projeto, protegido pelo bloqueio HTTP do .htaccess. Na instalação por ZIP, usa formacao-private. Ambos importam o catálogo no primeiro acesso autenticado e mantêm os downloads protegidos, sem exigir a cópia manual dos arquivos para a pasta privada.
+
 Publicar HTML pelo GitHub não ativa sozinho PHP/MySQL. Para confirmar a implantação, /api/session precisa responder JSON e /healthz precisa responder ok. Um 404 nessas rotas indica que a área privada ainda não está operando nesse domínio.
