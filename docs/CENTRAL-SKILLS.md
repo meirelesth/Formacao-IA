@@ -19,3 +19,11 @@ Na implantação automática do repositório pelo GitHub, o PHP lê o acervo atu
 Publicar HTML pelo GitHub não ativa sozinho PHP/MySQL. Para confirmar a implantação, /api/session precisa responder JSON e /healthz precisa responder ok. Um 404 nessas rotas indica que a área privada ainda não está operando nesse domínio.
 
 Em 04/10/2026, 15 skills relacionadas a conteúdo empresarial foram retiradas do catálogo, dos pacotes individuais e do ZIP completo. A lista de IDs excluídos também remove os registros importados anteriormente, preservando as demais skills. O acervo disponível contém 1.298 entradas.
+
+## Português do Brasil
+
+Os títulos e descrições do catálogo e os textos dos 126 pacotes são adaptados para PT-BR. Cada SKILL.md contém uma instrução explícita para produzir respostas e materiais em português do Brasil, com interface agents/openai.yaml também em português. Identificadores técnicos, comandos, exemplos de código e arquivos executáveis mantêm sua função e seus nomes. A importação da versão localizada atualiza títulos e descrições dos registros existentes uma única vez, sem alterar a publicação, links de download ou comandos definidos pelo professor.
+
+As entradas de catálogo com fonte externa não contêm um pacote hospedado nesta plataforma. O prompt orienta traduzir a documentação e as instruções para PT-BR antes da instalação, preservando o código e os requisitos. A instalação depende do agente e do acesso à fonte.
+
+A tradução em lote utiliza OPUS-MT (Helsinki-NLP), com revisão de termos e proteção dos trechos técnicos. Referência do modelo: https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-pt .

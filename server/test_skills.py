@@ -38,7 +38,7 @@ class SkillsTests(unittest.TestCase):
         self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
         packages=[s for s in skills if s['download_url'].startswith('/api/skills/')]
         self.assertEqual(len(packages),126)
-        target=next(s for s in packages if s['title']=='docx')
+        target=next(s for s in packages if s['title']=='Documentos do Word (DOCX)')
         url=target['download_url']
         self.assertEqual(self.request(url)['status'],401)
         download=self.request(url,cookie=student)
@@ -79,3 +79,38 @@ class SkillsTests(unittest.TestCase):
         self.assertEqual(len(visible),1298)
         for id in source['excluded_skill_ids']:
             self.assertEqual(self.request(f'/api/skills/{id}/download',cookie=student)['status'],404)
+
+    def test_ptbr_packages_and_existing_catalog_migration(self):
+        import base64, io, json, re, zipfile
+        from pathlib import Path
+        source=json.loads((Path(__file__).parent/'skills-catalog.json').read_text())
+        packages=json.loads((Path(__file__).parent/'skills-packages.json').read_text())
+        self.assertEqual(source['locale'],'pt-BR')
+        for key,package in packages.items():
+            if key=='bundle':continue
+            with zipfile.ZipFile(io.BytesIO(base64.b64decode(package['base64']))) as archive:
+                skills=[n for n in archive.namelist() if n.endswith('SKILL.md')]
+                self.assertTrue(skills)
+                for name in skills:
+                    text=archive.read(name).decode('utf8')
+                    self.assertTrue(text.startswith('---\n'))
+                    self.assertIn('## Idioma obrigatório: português do Brasil (PT-BR)',text)
+                    self.assertIn('Responda sempre em português do Brasil.',text)
+                    interface=archive.read(name.rsplit('/',1)[0]+'/agents/openai.yaml').decode('utf8')
+                    self.assertIn('português do Brasil',interface)
+                    self.assertIn('display_name:',interface)
+        student,token=self.login()
+        self.request('/api/skills',cookie=student)
+        target=next(s for s in source['skills'] if s['title']=='Agentes de IA no n8n')
+        with self.app.connect() as db:
+            db.execute('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['n8n-n8n-agents','Design n8n AI agents the right way.',target['id']])
+            db.execute('DELETE FROM skills_imports WHERE version=?',(source['import_version'],))
+            db.execute("UPDATE users SET role='admin' WHERE email='a@example.com'")
+        visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
+        migrated=next(s for s in visible if s['id']==target['id'])
+        self.assertEqual(migrated['title'],target['title'])
+        self.assertEqual(migrated['description'],target['description'])
+        self.assertFalse(migrated['published'])
+        with self.app.connect() as db:db.execute('UPDATE skills SET title=? WHERE id=?',['Minha edição em português',target['id']])
+        visible=self.request('/api/admin/skills',cookie=student)['body']['skills']
+        self.assertEqual(next(s for s in visible if s['id']==target['id'])['title'],'Minha edição em português')

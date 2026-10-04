@@ -13,6 +13,13 @@ if($mode==='reset'){
     foreach(['sessions','progress','access_tokens','limits','mail_jobs','audit'] as $table)$app->query('DELETE FROM '.$table);
     $app->query("DELETE FROM users WHERE role='student'");$app->query('UPDATE users SET otp_step=-1');
     foreach([['Aluno A','a@example.com','senha-local-123456','basica'],['Aluno B','b@example.com','senha-local-654321','avancada']] as [$name,$email,$pass,$course])$app->query('INSERT INTO users(name,email,password,courses,created) VALUES(?,?,?,?,?)',[$name,$email,FormacaoApp::hashPassword($pass),json_encode([$course]),time()]);
+}elseif($mode==='seed-legacy-localization'){
+    $source=json_decode(file_get_contents('/var/www/formacao-private/skills-catalog.json'),true,512,JSON_THROW_ON_ERROR);
+    foreach($source['skills'] as $row)if($row['title']==='Agentes de IA no n8n'){
+        $app->query('UPDATE skills SET title=?,description=?,published=0 WHERE id=?',['n8n-n8n-agents','Design n8n AI agents the right way.',$row['id']]);
+        $app->query('DELETE FROM skills_imports WHERE version=?',[$source['import_version']]);
+        echo json_encode($row);break;
+    }
 }elseif($mode==='seed-retired-skills'){
     $source=json_decode(file_get_contents('/var/www/formacao-private/skills-catalog.json'),true,512,JSON_THROW_ON_ERROR);
     foreach($source['excluded_skill_ids'] as $id)$app->query('INSERT INTO skills(id,title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',[$id,'Retirada','Dados','Conteúdo anterior','1.0','claude-code','/api/skills/'.$id.'/download','','',1,1]);

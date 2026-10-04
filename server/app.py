@@ -110,6 +110,8 @@ class Application(Access):
             if db.execute('SELECT 1 FROM skills_imports WHERE version=?',(source['import_version'],)).fetchone(): return
             fields=('id','title','category','description','version','platform','download_url','source_url','install_command','published','updated')
             db.executemany('INSERT OR IGNORE INTO skills('+','.join(fields)+') VALUES('+','.join('?' for f in fields)+')',[[s[f] for f in fields] for s in source['skills']])
+            if source.get('locale')=='pt-BR' and source.get('localize_existing'):
+                db.executemany('UPDATE skills SET title=?,description=?,category=? WHERE id=?',[[s['title'],s['description'],s['category'],s['id']] for s in source['skills']])
             db.execute('INSERT OR IGNORE INTO skills_imports(version) VALUES(?)',(source['import_version'],))
 
     def skills_route(self,path,method,data,session,respond):
@@ -302,5 +304,3 @@ def main():
         with make_server('127.0.0.1',args.port,app) as httpd: httpd.serve_forever()
 
 if __name__=='__main__': main()
-
-

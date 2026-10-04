@@ -237,6 +237,9 @@ final class FormacaoApp {
         $this->db->beginTransaction();
         try{
             foreach($source['skills'] as $row)$this->query('INSERT IGNORE INTO skills(id,title,category,description,version,platform,download_url,source_url,install_command,published,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',array_values($row));
+            if(($source['locale']??'')==='pt-BR'&&!empty($source['localize_existing'])){
+                foreach($source['skills'] as $row)$this->query('UPDATE skills SET title=?,description=?,category=? WHERE id=?',[$row['title'],$row['description'],$row['category'],$row['id']]);
+            }
             $this->query('INSERT IGNORE INTO skills_imports(version) VALUES(?)',[$source['import_version']]);$this->db->commit();
         }catch(Throwable $e){$this->db->rollBack();throw $e;}
     }
@@ -262,7 +265,11 @@ final class FormacaoApp {
         if(!$admin||!in_array($method,['POST','PUT'],true))$this->fail(405,'Método não permitido.');
         $values=[];
         foreach(['title'=>120,'category'=>60,'description'=>500,'version'=>24,'platform'=>24,'download_url'=>1000,'source_url'=>1000,'install_command'=>800] as $field=>$limit){
-            $value=$data[$field]??'';if(!is_string($value)||strlen($value)>$limit||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))$this->fail(400,'Campo inválido: '.$field);$values[$field]=trim($value);
+            $value=$data[$field]??'';
+            if(!is_string($value)||strlen($value)>$limit*4)$this->fail(400,'Campo inválido: '.$field);
+            $characters=preg_match_all('/./us',$value);
+            if($characters===false||$characters>$limit||preg_match('/[\x00-\x08\x0b\x0c\x0e-\x1f]/',$value))$this->fail(400,'Campo inválido: '.$field);
+            $values[$field]=trim($value);
         }
         if(!$values['title']||!$values['category']||!$values['description']||!$values['version']||!in_array($values['platform'],['claude','claude-code','codex','catalog'],true)||!is_bool($data['published']??null))$this->fail(400,'Preencha os campos obrigatórios.');
         foreach(['download_url','source_url'] as $field){$u=$values[$field];if($field==='download_url'&&preg_match('~^/api/skills/[0-9]+/download$~D',$u))continue;if($u!==''&&(!filter_var($u,FILTER_VALIDATE_URL)||parse_url($u,PHP_URL_SCHEME)!=='https'||parse_url($u,PHP_URL_USER)!==null||parse_url($u,PHP_URL_PASS)!==null))$this->fail(400,'Use um link HTTPS sem credenciais.');}

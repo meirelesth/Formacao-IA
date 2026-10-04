@@ -162,6 +162,9 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call('/api/admin/skills','PUT',{**update,'download_url':''},c)[0],400)
         self.assertEqual(call('/api/admin/skills','PUT',{**update,'published':False},c)[0],200)
         self.assertNotIn(id,[s['id'] for s in call('/api/skills',cookie=a)[2]['skills']])
+        accented={**update,'published':False,'description':'Á'*500}
+        self.assertEqual(call('/api/admin/skills','PUT',accented,c)[0],200)
+        self.assertEqual(call('/api/admin/skills','PUT',{**accented,'description':'Á'*501},c)[0],400)
 
     def test_central_company_withdrawal_existing_database(self):
         a,_=self.login()
@@ -181,7 +184,7 @@ class HostingerTests(unittest.TestCase):
             self.assertEqual(status,200)
             self.assertEqual(len(body['skills']),1298)
             self.assertEqual(sum(bool(s['download_url']) for s in body['skills']),126)
-            target=next(s for s in body['skills'] if s['title']=='docx')
+            target=next(s for s in body['skills'] if s['title']=='Documentos do Word (DOCX)')
             self.assertEqual(call(target['download_url'])[0],401)
             self.assertTrue(call(target['download_url'],cookie=a)[2].startswith('PK'))
             self.assertEqual(len(call('/api/skills',cookie=a)[2]['skills']),1298)
@@ -198,7 +201,7 @@ class HostingerTests(unittest.TestCase):
         skills=call('/api/skills',cookie=a)[2]['skills']
         self.assertEqual(sum(s['platform']=='catalog' for s in skills),1172)
         self.assertEqual(sum(s['download_url'].startswith('/api/skills/') for s in skills),126)
-        target=next(s for s in skills if s['title']=='docx')
+        target=next(s for s in skills if s['title']=='Documentos do Word (DOCX)')
         self.assertEqual(call(target['download_url'])[0],401)
         download=call(target['download_url'],cookie=a)
         self.assertEqual(download[0],200)
@@ -209,6 +212,21 @@ class HostingerTests(unittest.TestCase):
         self.assertEqual(call(target['download_url'],cookie=a)[0],404)
         self.assertFalse(any(s['id']==target['id'] for s in call('/api/skills',cookie=a)[2]['skills']))
         self.assertEqual(call('/api/skills/bundle/download',cookie=c)[0],200)
+
+    def test_central_ptbr_migration_preserves_publication(self):
+        a,_=self.login()
+        call('/api/skills',cookie=a)
+        original=json.loads(fixture('seed-legacy-localization'))
+        c,csrf=self.admin()
+        rows=call('/api/admin/skills',cookie=c)[2]['skills']
+        migrated=next(s for s in rows if s['id']==original['id'])
+        self.assertEqual(migrated['title'],original['title'])
+        self.assertEqual(migrated['description'],original['description'])
+        self.assertFalse(migrated['published'])
+        changed={**migrated,'title':'Minha edição em português','csrf':csrf}
+        self.assertEqual(call('/api/admin/skills','PUT',changed,c)[0],200)
+        rows=call('/api/admin/skills',cookie=c)[2]['skills']
+        self.assertEqual(next(s for s in rows if s['id']==original['id'])['title'],changed['title'])
 
     def test_30_payment_access_and_duplicate_notifications(self):
         fixture('seed-payments')
