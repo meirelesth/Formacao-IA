@@ -101,6 +101,70 @@ final class FormacaoApp {
         $this->query('INSERT INTO access_tokens(token_hash,purpose,email,name,courses,user_id,expires) VALUES(?,?,?,?,?,?,?)',[hash('sha256',$raw),$purpose,$email,$name,json_encode($courses),$id,time()+($purpose==='invite'?172800:1800)]);
         $this->db->commit();return $raw;
     }
+
+    private function agendaSchema(): void {
+        $this->db->exec('CREATE TABLE IF NOT EXISTS class_bookings (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL,
+            starts BIGINT NOT NULL, ends BIGINT NOT NULL, created BIGINT NOT NULL,
+            INDEX booking_period(starts,ends), INDEX booking_student(user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    }
+    private function agendaRoute(string $method,array $data,array $session): never {
+        $this->agendaSchema();
+        $zone=new DateTimeZone('America/Sao_Paulo');
+        $admin=$session['role']==='admin';
+        if(!$admin&&!count(json_decode($session['courses'],true,512,JSON_THROW_ON_ERROR)))$this->fail(403,'A agenda é liberada após a contratação do curso.');
+        if($method==='GET') {
+            $date=$_GET['date']??(new DateTimeImmutable('now',$zone))->format('Y-m-d');
+            $duration=$_GET['duration']??'120';
+        } elseif($method==='POST') {
+            $date=$data['date']??null;$duration=$data['duration']??null;
+        } else $this->fail(405,'Método não permitido.');
+        if(!is_string($date)||!preg_match('/^\d{4}-\d{2}-\d{2}$/D',$date))$this->fail(400,'Escolha uma data válida.');
+        $day=DateTimeImmutable::createFromFormat('!Y-m-d',$date,$zone);
+        if(!$day||$day->format('Y-m-d')!==$date)$this->fail(400,'Escolha uma data válida.');
+        if(!is_int($duration)&&!(is_string($duration)&&ctype_digit($duration)))$this->fail(400,'Duração inválida.');
+        $duration=(int)$duration;
+        if($duration<30||$duration>210||$duration%30!==0)$this->fail(400,'Escolha uma duração entre 30 minutos e 3h30, em intervalos de 30 minutos.');
+        $today=new DateTimeImmutable('today',$zone);
+        if($day<$today||$day>$today->modify('+180 days'))$this->fail(400,'Escolha uma data nos próximos 180 dias.');
+        $weekday=(int)$day->format('N');
+        $open=$day->setTime($weekday===6?14:18,0)->getTimestamp();
+        $close=$day->setTime($weekday===6?17:21,$weekday===6?0:30)->getTimestamp();
+        if($method==='GET') {
+            $busy=$this->query('SELECT starts,ends FROM class_bookings WHERE starts<? AND ends>?',[$close,$open])->fetchAll();
+            $slots=[];
+            if($weekday!==7)for($t=$open;$t+$duration*60<=$close;$t+=1800) {
+                if($t<=time())continue;$free=true;
+                foreach($busy as $b)if($t<(int)$b['ends']&&$t+$duration*60>(int)$b['starts']){$free=false;break;}
+                if($free)$slots[]=['time'=>(new DateTimeImmutable('@'.$t))->setTimezone($zone)->format('H:i'),'end'=>(new DateTimeImmutable('@'.($t+$duration*60)))->setTimezone($zone)->format('H:i')];
+            }
+            $sql='SELECT b.id,b.starts,b.ends'.($admin?',u.name':'').' FROM class_bookings b'.($admin?' JOIN users u ON u.id=b.user_id':'').' WHERE b.ends>?'.($admin?'':' AND b.user_id=?').' ORDER BY b.starts LIMIT 200';
+            $bookings=$this->query($sql,$admin?[time()]:[time(),$session['user_id']])->fetchAll();
+            $this->json(200,['date'=>$date,'timezone'=>'America/Sao_Paulo','admin'=>$admin,'slots'=>$slots,'bookings'=>$bookings]);
+        }
+        $clock=$data['time']??null;
+        if(!is_string($clock)||!preg_match('/^([0-2][0-9]):(00|30)$/D',$clock))$this->fail(400,'Escolha um horário disponível.');
+        $hour=(int)substr($clock,0,2);if($hour>23)$this->fail(400,'Horário inválido.');
+        $start=$day->setTime($hour,(int)substr($clock,3,2))->getTimestamp();$end=$start+$duration*60;
+        if($weekday===7||$start<$open||$end>$close||$start<=time())$this->fail(400,'A aula deve acontecer inteira dentro dos horários disponíveis. Domingo aguarda definição.');
+        if($admin)$this->fail(403,'Faça a reserva pela conta do aluno contratado.');
+        $this->db->beginTransaction();
+        try {
+            // All reservations for the teacher/day share a durable row lock, including an empty day.
+            $key=hash('sha256','agenda:teacher:'.$date);
+            $this->query('INSERT IGNORE INTO limits(key_hash,window_start,count) VALUES(?,?,0)',[$key,time()]);
+            $this->query('SELECT key_hash FROM limits WHERE key_hash=? FOR UPDATE',[$key]);
+            $user=$this->query('SELECT active,courses FROM users WHERE id=? FOR UPDATE',[$session['user_id']])->fetch();
+            if(!$user||!(int)$user['active']||!count(json_decode($user['courses'],true,512,JSON_THROW_ON_ERROR))){$this->db->rollBack();$this->fail(403,'Matrícula não disponível para agendamento.');}
+            $busy=$this->query('SELECT id FROM class_bookings WHERE starts<? AND ends>? LIMIT 1 FOR UPDATE',[$end,$start])->fetch();
+            if($busy){$this->db->rollBack();$this->fail(409,'Esse horário acabou de ser reservado. Escolha outro horário.');}
+            $this->query('INSERT INTO class_bookings(user_id,starts,ends,created) VALUES(?,?,?,?)',[$session['user_id'],$start,$end,time()]);
+            $id=(int)$this->db->lastInsertId();$this->audit((int)$session['user_id'],'class_booking',(string)$id);$this->db->commit();
+            $this->json(201,['ok'=>true,'id'=>$id]);
+        } catch(Throwable $e) {if($this->db->inTransaction())$this->db->rollBack();throw $e;}
+    }
+
     public function handle(): never {
         header('X-Content-Type-Options: nosniff');header('Referrer-Policy: same-origin');header('X-Frame-Options: DENY');header('Cache-Control: no-store');
         header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://cdn.jsdelivr.net; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
@@ -189,6 +253,7 @@ final class FormacaoApp {
         if(str_starts_with($path,'/api/')){
             if(!$session)$this->fail(401,'Entre para acessar sua formação.');
             if($method!=='GET')$this->csrf($data,$session);
+            if($path==='/api/agenda')$this->agendaRoute($method,$data,$session);
             if(str_starts_with($path,'/api/admin/')){if($session['role']!=='admin')$this->fail(403,'Acesso exclusivo da administração.');if(str_starts_with($path,'/api/admin/payments/'))(new Payments($this,$this->private))->adminRoute($path,$method,$data);$this->admin($path,$method,$data,$session);}
             if($path==='/api/skills')$this->skillRoute($method,$data,false);
             if(preg_match('~^/api/skills/(bundle|[0-9]+)/download$~D',$path,$match))$this->skillDownload($method,$match[1],$session);
