@@ -9,6 +9,7 @@ if($mode==='configure'){
 }
 $cfg=require $path;$app=new FormacaoApp($cfg,'/var/www/html','/var/www/formacao-private');
 if($mode==='reset'){
+    if($app->query("SHOW TABLES LIKE 'class_bookings'")->fetch())$app->query('DELETE FROM class_bookings');
     $app->db->exec(Payments::SCHEMA);$app->query('DELETE FROM payment_orders');
     foreach(['sessions','progress','access_tokens','limits','mail_jobs','audit'] as $table)$app->query('DELETE FROM '.$table);
     $app->query("DELETE FROM users WHERE role='student'");$app->query('UPDATE users SET otp_step=-1');

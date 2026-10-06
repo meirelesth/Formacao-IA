@@ -41,6 +41,44 @@ class HostingerTests(unittest.TestCase):
     def invite(self,email='new@example.com',courses=None):
         cookie,csrf=self.admin();status,_,b=call('/api/admin/invite','POST',{'name':'Novo Aluno','email':email,'courses':courses or ['basica'],'csrf':csrf},cookie)
         self.assertEqual(status,201);return b['link'].split('#')[1]
+    def test_agenda_hours_privacy_and_concurrent_reservations(self):
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+        from concurrent.futures import ThreadPoolExecutor
+        day=datetime.now(ZoneInfo('America/Sao_Paulo')).date()+timedelta(days=7)
+        while day.weekday()!=0:day+=timedelta(days=1)
+        date=day.isoformat()
+        self.assertEqual(call('/api/agenda')[0],401)
+        ca,sa=self.login();cb,sb=self.login('b@example.com','senha-local-654321')
+        endpoint='/api/agenda?date='+date+'&duration=120'
+        status,_,body=call(endpoint,cookie=ca)
+        self.assertEqual(status,200);self.assertEqual([x['time'] for x in body['slots']],['18:00','20:00'])
+        payload={'date':date,'duration':120,'time':'18:00','csrf':sa}
+        self.assertEqual(call('/api/agenda','POST',{**payload,'csrf':'bad'},ca)[0],403)
+        for clock in ['17:30','19:00','19:30','20:30']:
+            self.assertEqual(call('/api/agenda','POST',{**payload,'time':clock},ca)[0],400)
+        self.assertEqual(call('/api/agenda','POST',{**payload,'duration':240},ca)[0],400)
+        self.assertEqual(call('/api/agenda','POST',{**payload,'date':(day+timedelta(days=6)).isoformat()},ca)[0],400)
+        sat=(day+timedelta(days=5)).isoformat()
+        self.assertEqual([x['time'] for x in call('/api/agenda?date='+sat,cookie=ca)[2]['slots']],['14:00'])
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results=list(pool.map(lambda pair:call('/api/agenda','POST',{**payload,'csrf':pair[1]},pair[0]),[(ca,sa),(cb,sb)]))
+        self.assertEqual(sorted(x[0] for x in results),[201,409])
+        winner,ws=(ca,sa) if results[0][0]==201 else (cb,sb)
+        loser,ls=(cb,sb) if winner==ca else (ca,sa)
+        booked=call(endpoint,cookie=winner)[2]
+        self.assertEqual(len(booked['bookings']),1);self.assertTrue(booked['already_booked']);self.assertEqual(booked['slots'],[])
+        private=call(endpoint,cookie=loser)[2]
+        self.assertEqual([x['time'] for x in private['slots']],['20:00']);self.assertEqual(private['bookings'],[])
+        self.assertNotIn('name',booked['bookings'][0])
+        self.assertEqual(call('/api/agenda','POST',{**payload,'csrf':ws,'time':'20:00'},winner)[0],409)
+        self.assertEqual(call('/api/agenda','POST',{**payload,'csrf':ls,'time':'20:00'},loser)[0],201)
+        self.assertEqual(call('/api/agenda','POST',{**payload,'date':sat,'time':'14:00'},ca)[0],201)
+        self.assertEqual(call('/api/agenda','POST',{**payload,'date':sat,'time':'14:00'},ca)[0],409)
+        admin,_=self.admin();all_bookings=call(endpoint,cookie=admin)[2]
+        self.assertTrue(all_bookings['admin']);self.assertEqual(len(all_bookings['bookings']),3)
+        self.assertIn('name',all_bookings['bookings'][0])
+
     def test_01_setup_closed_and_public_assets(self):
         self.assertEqual(call('/instalar')[0],404)
         for path in ['/','/entrar.html','/ativar.html','/login.css','/certificado.js','/assets/certificado-modelo.png']:
