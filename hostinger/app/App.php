@@ -125,29 +125,31 @@ final class FormacaoApp {
         if(!$day||$day->format('Y-m-d')!==$date)$this->fail(400,'Escolha uma data válida.');
         if(!is_int($duration)&&!(is_string($duration)&&ctype_digit($duration)))$this->fail(400,'Duração inválida.');
         $duration=(int)$duration;
-        if($duration<30||$duration>210||$duration%30!==0)$this->fail(400,'Escolha uma duração entre 30 minutos e 3h30, em intervalos de 30 minutos.');
+        if($duration!==120)$this->fail(400,'Cada aula tem exatamente duas horas.');
         $today=new DateTimeImmutable('today',$zone);
         if($day<$today||$day>$today->modify('+180 days'))$this->fail(400,'Escolha uma data nos próximos 180 dias.');
         $weekday=(int)$day->format('N');
         $open=$day->setTime($weekday===6?14:18,0)->getTimestamp();
-        $close=$day->setTime($weekday===6?17:21,$weekday===6?0:30)->getTimestamp();
+        $close=$day->setTime($weekday===6?17:22,0)->getTimestamp();
+        $dayEnd=$day->modify('+1 day')->getTimestamp();
         if($method==='GET') {
             $busy=$this->query('SELECT starts,ends FROM class_bookings WHERE starts<? AND ends>?',[$close,$open])->fetchAll();
+            $alreadyBooked=!$admin&&(bool)$this->query('SELECT id FROM class_bookings WHERE user_id=? AND starts<? AND ends>? LIMIT 1',[$session['user_id'],$dayEnd,$day->getTimestamp()])->fetch();
             $slots=[];
-            if($weekday!==7)for($t=$open;$t+$duration*60<=$close;$t+=1800) {
+            if($weekday!==7&&!$alreadyBooked)for($t=$open;$t+$duration*60<=$close;$t+=7200) {
                 if($t<=time())continue;$free=true;
                 foreach($busy as $b)if($t<(int)$b['ends']&&$t+$duration*60>(int)$b['starts']){$free=false;break;}
                 if($free)$slots[]=['time'=>(new DateTimeImmutable('@'.$t))->setTimezone($zone)->format('H:i'),'end'=>(new DateTimeImmutable('@'.($t+$duration*60)))->setTimezone($zone)->format('H:i')];
             }
             $sql='SELECT b.id,b.starts,b.ends'.($admin?',u.name':'').' FROM class_bookings b'.($admin?' JOIN users u ON u.id=b.user_id':'').' WHERE b.ends>?'.($admin?'':' AND b.user_id=?').' ORDER BY b.starts LIMIT 200';
             $bookings=$this->query($sql,$admin?[time()]:[time(),$session['user_id']])->fetchAll();
-            $this->json(200,['date'=>$date,'timezone'=>'America/Sao_Paulo','admin'=>$admin,'slots'=>$slots,'bookings'=>$bookings]);
+            $this->json(200,['date'=>$date,'timezone'=>'America/Sao_Paulo','admin'=>$admin,'already_booked'=>$alreadyBooked,'slots'=>$slots,'bookings'=>$bookings]);
         }
         $clock=$data['time']??null;
         if(!is_string($clock)||!preg_match('/^([0-2][0-9]):(00|30)$/D',$clock))$this->fail(400,'Escolha um horário disponível.');
         $hour=(int)substr($clock,0,2);if($hour>23)$this->fail(400,'Horário inválido.');
         $start=$day->setTime($hour,(int)substr($clock,3,2))->getTimestamp();$end=$start+$duration*60;
-        if($weekday===7||$start<$open||$end>$close||$start<=time())$this->fail(400,'A aula deve acontecer inteira dentro dos horários disponíveis. Domingo aguarda definição.');
+        if($weekday===7||!in_array($clock,$weekday===6?['14:00']:['18:00','20:00'],true)||$start<$open||$end>$close||$start<=time())$this->fail(400,'A aula deve acontecer inteira dentro dos horários disponíveis. Domingo aguarda definição.');
         if($admin)$this->fail(403,'Faça a reserva pela conta do aluno contratado.');
         $this->db->beginTransaction();
         try {
@@ -157,6 +159,7 @@ final class FormacaoApp {
             $this->query('SELECT key_hash FROM limits WHERE key_hash=? FOR UPDATE',[$key]);
             $user=$this->query('SELECT active,courses FROM users WHERE id=? FOR UPDATE',[$session['user_id']])->fetch();
             if(!$user||!(int)$user['active']||!count(json_decode($user['courses'],true,512,JSON_THROW_ON_ERROR))){$this->db->rollBack();$this->fail(403,'Matrícula não disponível para agendamento.');}
+            if($this->query('SELECT id FROM class_bookings WHERE user_id=? AND starts<? AND ends>? LIMIT 1 FOR UPDATE',[$session['user_id'],$dayEnd,$day->getTimestamp()])->fetch()){$this->db->rollBack();$this->fail(409,'Você já tem uma aula neste dia. O limite é de duas horas por aluno por dia.');}
             $busy=$this->query('SELECT id FROM class_bookings WHERE starts<? AND ends>? LIMIT 1 FOR UPDATE',[$end,$start])->fetch();
             if($busy){$this->db->rollBack();$this->fail(409,'Esse horário acabou de ser reservado. Escolha outro horário.');}
             $this->query('INSERT INTO class_bookings(user_id,starts,ends,created) VALUES(?,?,?,?)',[$session['user_id'],$start,$end,time()]);

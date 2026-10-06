@@ -36,23 +36,23 @@
   let agendaRequest=0;
   const localDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const bookingDate=t=>new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',dateStyle:'short',timeStyle:'short'}).format(new Date(Number(t)*1000));
-  function agenda(){return `<h1>Agenda de aulas</h1><p class="lede">Escolha uma data e um horário livre para sua aula ao vivo.</p><p class="note">Segunda a sexta: 18h às 21h30 · Sábado: 14h às 17h.<br>Horário de Brasília. Domingo aguarda definição de horários pelo professor.</p><section class="module"><label>Data da aula <input id="agenda-date" type="date" min="${localDate()}" value="${localDate()}"></label> <label>Duração <select id="agenda-duration">${[30,60,90,120,150,180,210].map(n=>`<option value="${n}" ${n===120?'selected':''}>${Math.floor(n/60)}h${n%60?'30':''}</option>`).join('')}</select></label><p id="agenda-status" role="status" aria-live="polite"></p><div id="agenda-slots" class="completion-actions"></div></section><h2 id="agenda-bookings-title">Minhas aulas agendadas</h2><div id="agenda-bookings"></div>`;}
+  function agenda(){return `<h1>Agenda de aulas</h1><p class="lede">Escolha uma data e um horário livre para sua aula ao vivo.</p><p class="note">Segunda a sexta: 18h às 20h e 20h às 22h · Sábado: aula das 14h às 16h (faixa disponível: 14h às 17h).<br>Cada aula dura duas horas. Você pode reservar apenas uma aula por dia.<br>Horário de Brasília. Domingo aguarda definição de horários pelo professor.</p><section class="module"><label>Data da aula <input id="agenda-date" type="date" min="${localDate()}" value="${localDate()}"></label><p id="agenda-status" role="status" aria-live="polite"></p><div id="agenda-slots" class="completion-actions"></div></section><h2 id="agenda-bookings-title">Minhas aulas agendadas</h2><div id="agenda-bookings"></div>`;}
   async function loadAgenda(){
-    const date=document.getElementById('agenda-date')?.value,duration=document.getElementById('agenda-duration')?.value;if(!date)return;
+    const date=document.getElementById('agenda-date')?.value,duration=120;if(!date)return;
     const request=++agendaRequest,slots=document.getElementById('agenda-slots'),status=document.getElementById('agenda-status');
     slots.replaceChildren();status.textContent='Consultando horários disponíveis…';
     try{const j=await api(`api/agenda?date=${encodeURIComponent(date)}&duration=${duration}`);if(request!==agendaRequest||!document.contains(slots))return;
-      status.textContent=j.admin?'Agenda do professor. Reservas são feitas pela conta do aluno.':j.slots.length?'Selecione um horário e confirme sua reserva.':'Nenhum horário disponível para essa duração e data.';
+      status.textContent=j.admin?'Agenda do professor. Reservas são feitas pela conta do aluno.':j.already_booked?'Você já reservou sua aula de duas horas para este dia.':j.slots.length?'Selecione um horário e confirme sua reserva.':'Nenhum horário disponível para essa duração e data.';
       slots.innerHTML=j.admin?'':j.slots.map(s=>`<button class="button secondary" type="button" data-agenda-time="${s.time}">${s.time} às ${s.end}</button>`).join('');
       document.getElementById('agenda-bookings-title').textContent=j.admin?'Próximas aulas de todos os alunos':'Minhas aulas agendadas';
       document.getElementById('agenda-bookings').innerHTML=j.bookings.map(b=>`<article class="course-row"><div><h3>${escape(bookingDate(b.starts))}</h3><p>Até ${escape(bookingDate(b.ends))}${b.name?' · '+escape(b.name):''}</p></div></article>`).join('')||'<p class="note">Nenhuma aula agendada.</p>';
     }catch(err){if(request===agendaRequest&&document.contains(status)){status.textContent=err.message;slots.innerHTML='<button class="button secondary" type="button" id="agenda-retry">Tentar novamente</button>';}}
   }
-  main.addEventListener('change',e=>{if(['agenda-date','agenda-duration'].includes(e.target.id))loadAgenda();});
+  main.addEventListener('change',e=>{if(e.target.id==='agenda-date')loadAgenda();});
   main.addEventListener('click',async e=>{
     if(e.target.closest('#agenda-retry')){loadAgenda();return;}
     const b=e.target.closest('[data-agenda-time]');if(!b)return;
-    const date=document.getElementById('agenda-date').value,duration=Number(document.getElementById('agenda-duration').value),time=b.dataset.agendaTime;
+    const date=document.getElementById('agenda-date').value,duration=120,time=b.dataset.agendaTime;
     if(!window.confirm(`Confirmar aula em ${date.split('-').reverse().join('/')} às ${time}, com ${duration} minutos de duração (horário de Brasília)?`))return;
     main.querySelectorAll('[data-agenda-time]').forEach(button=>button.disabled=true);
     try{await api('api/agenda','POST',{date,duration,time});notice('Aula reservada. Esse período foi bloqueado para os outros alunos.');await loadAgenda();}
