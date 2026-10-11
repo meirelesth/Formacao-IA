@@ -1,0 +1,40 @@
+services:
+  financeiro:
+    build:
+      context: ..
+      dockerfile: financeiro/Dockerfile
+    restart: unless-stopped
+    environment:
+      FIN_DATABASE: /data/financeiro.sqlite3
+      FIN_ORIGIN: https://luisfernando.online
+      FIN_ALT_ORIGIN: https://srv1616271.hstgr.cloud
+      TZ: America/Sao_Paulo
+    ports:
+      - 127.0.0.1:8090:8090
+      - 127.0.0.1:8091:8091
+    volumes:
+      - financeiro-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [default, n8n-edge]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.financeiro.rule=Host(`srv1616271.hstgr.cloud`) && PathPrefix(`/fin`)
+      - traefik.http.routers.financeiro.entrypoints=websecure
+      - traefik.http.routers.financeiro.tls.certresolver=mytlschallenge
+      - traefik.http.services.financeiro.loadbalancer.server.port=8090
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/fin/healthz',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  financeiro-data:
+networks:
+  n8n-edge:
+    external: true
+    name: n8n_default

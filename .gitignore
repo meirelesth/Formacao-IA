@@ -3,3 +3,12 @@ __pycache__/
 *.pyc
 .env
 .venv/
+
+# Private financial records and local validation evidence
+financeiro/data/
+financeiro/browser-results/
+*.sqlite3-wal
+*.sqlite3-shm
+
+.playwright-cli/
+output/playwright/

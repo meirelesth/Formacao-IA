@@ -1,6 +1,8 @@
 Options -Indexes -MultiViews
 DirectoryIndex index.html
 RewriteEngine On
+RewriteRule ^financeiro(?:/|$) - [F,L,NC]
+RewriteRule ^fin(?:/|$) fin/index.php [END]
 # Toda requisição passa pelo controle central, inclusive materiais e catálogo.
 RewriteRule ^lf-router\.php$ - [L]
 RewriteRule ^ lf-router.php [END]
