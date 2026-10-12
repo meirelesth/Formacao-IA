@@ -83,4 +83,19 @@ class LedgerTests(unittest.TestCase):
         d=self.call('data?month=2026-10')[1];self.assertEqual(d['summary']['expenses'],0)
         with self.app.db() as db:self.assertEqual(db.execute('SELECT deleted FROM entries').fetchone()[0],1)
 
+    def test_edit_after_confirmation_preserves_confirmed_state(self):
+        self.entry()
+        self.assertEqual(self.call('review',{'id':1,'version':1,'amount':'150','paid_amount':'0','category':'Moradia'})[0],200)
+        d=self.call('data?month=2026-10')[1]
+        self.assertEqual(d['summary']['expenses'],15000)
+        self.assertEqual(d['entries'][0]['review'],0)
+        self.assertEqual(self.call('review',{'id':1,'version':2,'amount':'75','paid_amount':'0','category':'Moradia'})[0],200)
+        d=self.call('data?month=2026-10')[1];self.assertEqual(d['summary']['expenses'],7500)
+
+    def test_explicit_payment_correction_after_confirmation(self):
+        self.entry()
+        self.call('settle',{'id':1,'version':1,'amount':'100','paid_date':'2026-10-11'})
+        self.assertEqual(self.call('review',{'id':1,'version':2,'amount':'90','paid_amount':'90','category':'Moradia'})[0],200)
+        d=self.call('data?month=2026-10')[1];self.assertEqual(d['summary']['expenses'],9000);self.assertEqual(d['summary']['paid'],9000)
+
 if __name__=='__main__':unittest.main()

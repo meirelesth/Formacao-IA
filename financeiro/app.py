@@ -256,9 +256,10 @@ class Application:
                 if not category: raise Problem('Informe a categoria.')
                 if due and due[:7]!=r['month']: raise Problem('A data deve pertencer ao mês do lançamento.')
                 paid=r['paid']
-                if r['review'] and 'paid_amount' in p:paid=0 if str(p['paid_amount']) in ('0','0.00') else cents(p['paid_amount'])
+                if 'paid_amount' in p and r['kind']!='purchase':paid=0 if str(p['paid_amount']) in ('0','0.00') else cents(p['paid_amount'])
                 if amount<paid: raise Problem('O valor não pode ser menor que o pagamento já registrado.')
                 db.execute('UPDATE entries SET amount=?,paid=?,due_date=?,category=?,review=0,notes=?,version=version+1 WHERE id=?',(amount,paid,due,category,str(p.get('notes',''))[:500],r['id']))
+                self.audit(db,'entry.value_correction',r['id'],json.dumps({'before':{'amount':r['amount'],'paid':r['paid']},'after':{'amount':amount,'paid':paid}}))
             else:
                 if r['paid']: raise Problem('Estorne o pagamento antes de excluir.')
                 db.execute('UPDATE entries SET deleted=1,version=version+1 WHERE id=?',(r['id'],))
